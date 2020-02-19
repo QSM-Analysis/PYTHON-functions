@@ -30,6 +30,6 @@ def dipole_term(W=None,D=None,Mask=None,xx=None,*args,**kwargs):
 # dipole_term.m:19
     Ax=(np.fft.ifftn(multiply(D,np.fft.fftn(multiply(W,(np.fft.ifftn(multiply(D,np.fft.fftn(x)))))))))
 # dipole_term.m:21
-    y=Ax[ravel(Mask) == np.zeros(198*212*102)]
+    y=Ax[ravel(Mask) == np.zeros(D.shape)]
     print('pass')
 # dipole_term.m:22
