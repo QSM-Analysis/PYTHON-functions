@@ -1,10 +1,10 @@
 # Generated with SMOP  0.41
 import sys
-from smop.libsmop import *
+# from smop.libsmop import *
 from Fit_ppm_complex import *
 from unwrapLaplacian import *
 # from BET import*
-from arlo import*
+# from arlo import*
 # from extract_CSF import*
 # from PDF import*
 # from sphere_kernel import*
@@ -24,17 +24,16 @@ from arlo import*
 import scipy.io as scio
 import matplotlib.pyplot as plt
 import numpy as np
+from Fit_ppm_complex import Fit_ppm_complex
 # MEDI_Batch_yx.m
 
    
-   # loadmat(medi_siemens_data)
-    #print(iField)
 data=scio.loadmat('medi_siemens_data.mat')
-iField=data['iField']  
+iField=data['iField']
 
-# iMag=sqrt(sum(abs(iField) ** 2,4))
+iMag=np.sqrt(np.sum(abs(iField) ** 2,3))
+iFreq_raw,N_std,a,b=Fit_ppm_complex(iField)
 
-# iFreq_raw,N_std,a,b=Fit_ppm_complex(iField)
 # fig=plt.figure()
 # fig1=fig.add_subplot(111)
 # fig1.imshow(iFreq_raw[:,:,30])

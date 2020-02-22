@@ -1,5 +1,4 @@
 # Generated with SMOP  0.41
-from smop.libsmop import *
 import numpy as np
 
 # .\unwrapLaplacian.m

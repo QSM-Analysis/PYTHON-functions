@@ -1,5 +1,5 @@
 # Generated with SMOP  0.41
-from smop.libsmop import *
+#from smop.libsmop import *
 import numpy as np
 import scipy.io as scio
 # .\parse_QSM_input.m
@@ -181,5 +181,5 @@ def parse_QSM_input(varargin=None,*args,**kwargs):
     return lam,iFreq,RDF,N_std,iMag,Mask,matrix_size,matrix_size0,voxel_size,delta_TE,CF,B0_dir,merit,smv,radius,data_weighting,gradient_weighting,Debug_Mode,lam_CSF,Mask_CSF,solver
     
 if __name__ == '__main__':
-    pass
+    parse_QSM_input()
     

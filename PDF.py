@@ -1,10 +1,11 @@
 # Generated with SMOP  0.41
-from smop.libsmop import *
+#from smop.libsmop import *
 import pandas as pd
 import numpy as np
 from dipole_kernel import*
 from cgsolve import*
 from dipole_term import*
+from numpy import ravel
 # PDF.m
 
     # Projection onto Dipole Fields (PDF)
@@ -52,21 +53,21 @@ def PDF(iFreq=None,N_std=None,Mask=None,matrix_size=None,voxel_size=None,B0_dir=
 # PDF.m:41
     
     # zero pad
-    matrix_size0=copy(matrix_size)
+    matrix_size0 = matrix_size.copy()
 # PDF.m:46
-    d1=((Mask.max(1)).max(2))
+    d1 = Mask.max(2).max(1)
 # PDF.m:47
     d1first=np.floor((np.transpose(np.nonzero(d1)))[0])
 # PDF.m:48
     d1last=np.floor((np.transpose(np.nonzero(d1)))[-1])
 # PDF.m:49
-    d2=((Mask.max(0)).max(2))
+    d2 = Mask.max(2).max(0)
 # PDF.m:51
     d2first=np.floor((np.transpose(np.nonzero(d2)))[0])
 # PDF.m:52
     d2last=np.floor((np.transpose(np.nonzero(d2)))[-1])
 # PDF.m:53
-    d3=Mask.max(0).max(1)
+    d3=Mask.max(1).max(0)
 # PDF.m:55
     d3first=np.floor((np.transpose(np.nonzero(d3)))[0])
 # PDF.m:56
@@ -74,7 +75,7 @@ def PDF(iFreq=None,N_std=None,Mask=None,matrix_size=None,voxel_size=None,B0_dir=
     
 # PDF.m:57
     if n_pad > 0:
-        matrix_size=np.concatenate([dot(np.floor((d1last - d1first + n_pad) / 2),2),dot(np.floor((d2last - d2first + n_pad) / 2),2),dot(np.floor((d3last - d3first + n_pad) / 2),2)])
+        matrix_size=[np.floor((d1last - d1first + n_pad) / 2) * 2,np.floor((d2last - d2first + n_pad) / 2)*2, np.floor((d3last - d3first + n_pad) / 2)*2]
 # PDF.m:60
         #iFreq=iFreq[np.transpose(arange(d1first,d1last)),np.transpose(arange(d2first,d2last)),np.transpose(arange(d3first,d3last))] 
         iFreq=np.array(iFreq)[int(d1first[0]):int(d1last[0]),int(d2first[0]):int(d2last[0]),int(d3first[0]):int(d3last[0])]
@@ -99,7 +100,7 @@ def PDF(iFreq=None,N_std=None,Mask=None,matrix_size=None,voxel_size=None,B0_dir=
 # PDF.m:75
     W=W*(Mask > 0)
 # PDF.m:76
-    W_std=copy(W)
+    W_std = W.copy()#copy(W)
 # PDF.m:77
     W_var=W ** 2
 # PDF.m:78
@@ -118,13 +119,13 @@ def PDF(iFreq=None,N_std=None,Mask=None,matrix_size=None,voxel_size=None,B0_dir=
     # generating the RHS vector in Eq. 6 in the PDF paper
     p_temp=np.real(np.fft.ifftn(D*np.fft.fftn(W_var*(iFreq))))
 # PDF.m:88
-    b=p_temp[ravel(Mask) == np.zeros(np.size(D))]
+    b=p_temp[Mask == 0]
     print('b=',b)
 # PDF.m:89
     # set erance level and maximum iteration allowed
     E_noise_level=np.real(np.fft.ifftn(multiply(D,np.fft.fftn(multiply(W_std,np.ones(np.shape(N_std)))))))
 # PDF.m:92
-    itermax=copy(n_CG)
+    itermax=n_CG.copy()
 # PDF.m:93
     xx=None
     A=dipole_term(W_var,D,Mask,xx)

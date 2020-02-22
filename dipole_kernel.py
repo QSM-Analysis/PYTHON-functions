@@ -1,9 +1,10 @@
 # Generated with SMOP  0.41
 import numpy as np
-from smop.libsmop import *
+#from smop.libsmop import *
 import os
 import sys
 import scipy.io as scio
+from numpy import ravel, dot
 def dipole_kernel(varargin=None,*args,**kwargs):
     matrix_size,voxel_size,B0_dir,domain = parse_inputs(varargin[:])
     matrix_size=ravel(matrix_size)
