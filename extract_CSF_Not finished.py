@@ -1,49 +1,35 @@
 # Generated with SMOP  0.41
-from smop.libsmop import *
+#from smop.libsmop import *
 # extract_CSF.m
 import numpy as np
 from numpy import*
-    
-@function
-def extract_CSF(R2s=None,Mask=None,voxel_size=None,flag_erode=None,thresh_R2s=None,*args,**kwargs):
-    varargin = extract_CSF.varargin
-    nargin = extract_CSF.nargin
+
+def isempty(data):
+    if (type(data)!=np.ndarray):
+        if (data == None) or (data == []):
+            return True
+    return False
+
+#@function
+def extract_CSF(R2s=None,Mask=None,voxel_size=None,flag_erode=1,thresh_R2s=5,*args,**kwargs):
+#     varargin = extract_CSF.varargin
+#     nargin = extract_CSF.nargin
 
     if isempty(R2s):
         Mask_ROI_CSF=[]
-# extract_CSF.m:4
         return Mask_ROI_CSF
-  
-    if nargin < 5:
-        thresh_R2s=5
-# extract_CSF.m:9
-    
-    if nargin < 4:
-        flag_erode=1
-# extract_CSF.m:12
     
     n_region_cen=3
-# extract_CSF.m:15
     matrix_size=np.shape(Mask)
-# extract_CSF.m:17
     
-#下一行调试正确后可代替X,Y,Z的定义
-#    X,Y,Z=np.mgrid(np.dot((np.arange(0,matrix_size[0])),voxel_size[0]),np.dot((np.arange(0,matrix_size[1])),voxel_size[1]),np.dot((np.arange(0,matrix_size[2])),voxel_size[2]),nargout=3)
-# extract_CSF.m:22
-    tx=np.array([voxel_size[0]]).T
-    ty=np.array([voxel_size[1]]).T
-    tz=np.array([voxel_size[2]]).T
-    X=np.dot((np.arange(0,matrix_size[0])),tx)
-    Y=np.dot((np.arange(0,matrix_size[1])),ty)
-    Z=np.dot((np.arange(0,matrix_size[2])),tz)
+    X,Y,Z = np.mgrid[0:matrix_size[0],0:matrix_size[1],0:matrix_size[2]]
+    X, Y, Z = X * voxel_size[0], Y * voxel_size[1], Z * voxel_size[2]
  #   print(X[Mask>0])
     print(X.shape)
     X_cen=sum(X[Mask > 0]) / sum(ravel(Mask))
-# extract_CSF.m:23
-    Y_cen=sum(Y(Mask > 0)) / sum(ravel(Mask))
-# extract_CSF.m:24
-    Z_cen=sum(Z(Mask > 0)) / sum(ravel(Mask))
-# extract_CSF.m:25
+    Y_cen=sum(Y[Mask > 0]) / sum(ravel(Mask))
+    Z_cen=sum(Z[Mask > 0]) / sum(ravel(Mask))
+
     # Center region (sphere)
     radius_cen=30
 # extract_CSF.m:27
@@ -100,15 +86,10 @@ def extract_CSF(R2s=None,Mask=None,voxel_size=None,flag_erode=None,thresh_R2s=No
     
 if __name__ == '__main__':
     pass
-#以下为测试所用
 R2s=4
-Mask=np.array([[[1,1,4,2,1],[1,5,3,6,2],[1,2,6,4,3],[2,4,3,1,3],[3,3,4,2,5]],
-               [[1,2,6,3,4],[3,4,6,2,4],[3,7,6,3,2],[2,4,3,1,3],[3,3,4,2,5]],
-               [[3,4,6,2,4],[3,7,6,3,2],[2,6,4,5,3],[2,4,3,1,3],[3,3,4,2,5]],
-               [[1,1,4,2,1],[1,5,3,6,2],[1,2,6,4,3],[2,4,3,1,3],[3,3,4,2,5]],
-               [[1,1,4,2,1],[1,5,3,6,2],[1,2,6,4,3],[2,4,3,1,3],[3,3,4,2,5]]])
+Mask= np.ones([256,256,64])
 flag_erode=5
 thresh_R2s=7
-voxel_size=[[3,4,6,2,4],[3,7,6,3,2],[2,6,4,5,3]];
+voxel_size=[0.9375,0.9375,2.0];
 Mask_ROI_CSF = extract_CSF(R2s, Mask, voxel_size, flag_erode, thresh_R2s)
 print(Mask_ROI_CSF)
