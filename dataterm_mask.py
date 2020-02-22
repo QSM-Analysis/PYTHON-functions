@@ -1,7 +1,7 @@
 # Generated with SMOP  0.41
 from smop.libsmop import *
 import numpy as np
-from np import multiply,mean
+from numpy import multiply,mean
 # .\dataterm_mask.m
 
     # Generate the data weighting
@@ -17,9 +17,7 @@ from np import multiply,mean
     
     #   Created by Ildar Khalidov in 20010
 #   Last modified by Tian Liu on 2013.07.24
-    
-    
-@function
+
 def dataterm_mask(dataterm_weighting_mode=None,N_std=None,Mask=None,*args,**kwargs):
 
     if 0 == dataterm_weighting_mode:
@@ -37,4 +35,5 @@ def dataterm_mask(dataterm_weighting_mode=None,N_std=None,Mask=None,*args,**kwar
 # .\dataterm_mask.m:26
             w=w / mean(w[Mask > 0])
 # .\dataterm_mask.m:27
+    return w
     

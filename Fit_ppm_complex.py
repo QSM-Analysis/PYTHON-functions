@@ -132,7 +132,7 @@ def Fit_ppm_complex(M=None,opts=defopts):
 # Fit_ppm_complex.m:97
     p1=np.array(ip[1,:]).conj().T
 # Fit_ppm_complex.m:98
-    dp1=copy(p1)
+    dp1=p1.copy()
 # Fit_ppm_complex.m:100
     tol=dot(np.linalg.norm(p1[:]),opts.reltol)
 # Fit_ppm_complex.m:101

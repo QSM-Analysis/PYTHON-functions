@@ -1,11 +1,15 @@
 # Generated with SMOP  0.41
 from smop.libsmop import *
-import bdiv
-import fgrad
-import parse_QSM_input
-import sphere_kernel
-import dipole_kernel
-import SMV
+from bdiv import*
+from fgrad import*
+from parse_QSM_input import*
+from dipole_kernel import*
+from SMV import*
+import numpy as np
+from sphere_kernel import*
+from dataterm_mask import*
+from gradient_mask import*
+
 # .\MEDI_L1.m
 
     # Morphology Enabled Dipole Inversion (MEDI)
@@ -58,9 +62,9 @@ def MEDI_L1(varargin=None,*args,**kwargs):
 # .\MEDI_L1.m:48
     tol_norm_ratio=0.1
 # .\MEDI_L1.m:49
-    data_weighting_mode=data_weighting.copy()
+    data_weighting_mode=data_weighting
 # .\MEDI_L1.m:50
-    gradient_weighting_mode=gradient_weighting.copy()
+    gradient_weighting_mode=gradient_weighting
 # .\MEDI_L1.m:51
     grad=fgrad
 # .\MEDI_L1.m:52
@@ -73,21 +77,21 @@ def MEDI_L1(varargin=None,*args,**kwargs):
 # .\MEDI_L1.m:57
     tempn=N_std.astype(float)
 # .\MEDI_L1.m:58
-    D=dipole_kernel(matrix_size,voxel_size,B0_dir)
+    D=dipole_kernel(np.array([matrix_size,voxel_size,B0_dir]))
 # .\MEDI_L1.m:59
     if (smv):
         #     S = SMV_kernel(matrix_size, voxel_size,radius);
         SphereK=sphere_kernel(matrix_size,voxel_size,radius).astype(float)
 # .\MEDI_L1.m:63
-        Mask=SMV(Mask,SphereK) > 0.999
+        Mask=SMV(Mask,[SphereK]) > 0.999
 # .\MEDI_L1.m:64
         D=multiply((1 - SphereK),D)
 # .\MEDI_L1.m:65
-        RDF=RDF - SMV(RDF,SphereK)
+        RDF=RDF - SMV(RDF,[SphereK])
 # .\MEDI_L1.m:66
-        RDF=multiply(RDF,Mask)
+        RDF=multiply(RDF,[Mask])
 # .\MEDI_L1.m:67
-        tempn=sqrt(SMV(tempn ** 2,SphereK) + tempn ** 2)
+        tempn=sqrt(SMV(tempn ** 2,[SphereK]) + tempn ** 2)
 # .\MEDI_L1.m:68
     
     m=dataterm_mask(data_weighting_mode,tempn,Mask)
@@ -104,133 +108,133 @@ def MEDI_L1(varargin=None,*args,**kwargs):
     
     oldN_std=N_std.copy()
 # .\MEDI_L1.m:81
-    fprintf(np.concatenate(['Using ',solver,'\n']))
-    if 'gaussnewton' == solver:
-        x,cost_reg_history,cost_data_history=gaussnewton()
+    print('Using ',solver,'\n')
+
 # .\MEDI_L1.m:85
     
-    
-@function
-def gaussnewton(*args,**kwargs):
-
-    if flag_CSF:
-        LT_reg=lambda x=None: multiply(Mask_CSF,(x - mean(x[Mask_CSF])))
-# .\MEDI_L1.m:91
-    
-    
-    iter=0
-# .\MEDI_L1.m:94
-    x=np.zeros(matrix_size)
-# .\MEDI_L1.m:95
-    
-    if (logical_not(isempty(findstr(upper(Debug_Mode),'SAVEITER')))):
-        store_CG_results(multiply(dot(x / (dot(dot(dot(2,pi),delta_TE),CF)),1000000.0),Mask))
-    
-    res_norm_ratio=Inf.copy()
-# .\MEDI_L1.m:99
-    cost_data_history=np.zeros(1,max_iter)
-# .\MEDI_L1.m:100
-    cost_reg_history=np.zeros(1,max_iter)
-# .\MEDI_L1.m:101
-    e=1e-06
-# .\MEDI_L1.m:103
-    
-    badpoint=np.zeros(matrix_size)
-# .\MEDI_L1.m:104
-    Dconv=lambda dx=None: np.real(np.fft.ifftn(multiply(D,np.fft.fftn(dx))))
-# .\MEDI_L1.m:105
-    while (res_norm_ratio > tol_norm_ratio) and (iter < max_iter):
-
-        tic
-        iter=iter + 1
-# .\MEDI_L1.m:108
-        Vr=1.0 / sqrt(abs(multiply(wG,grad(np.real(x),voxel_size))) ** 2 + e)
-# .\MEDI_L1.m:109
-        w=multiply(m,exp(dot(1j,np.fft.ifftn(multiply(D,np.fft.fftn(x))))))
-# .\MEDI_L1.m:110
-        reg=lambda dx=None: div(multiply(wG,(multiply(Vr,(multiply(wG,grad(np.real(dx),voxel_size)))))),voxel_size)
-# .\MEDI_L1.m:111
+    def gaussnewton(*args,**kwargs):
+        nonlocal flag_CSF,matrix_size,
         if flag_CSF:
-            reg_CSF=lambda dx=None: multiply(lam_CSF,LT_reg(LT_reg(real(dx))))
-# .\MEDI_L1.m:113
-            reg=lambda dx=None: reg(dx) + reg_CSF(dx)
-# .\MEDI_L1.m:114
-        fidelity=lambda dx=None: Dconv(multiply(multiply(w.conj(),w),Dconv(dx)))
-# .\MEDI_L1.m:116
-        A=lambda dx=None: reg(dx) + dot(dot(2,lambda_),fidelity(dx))
-# .\MEDI_L1.m:118
-        b=reg(x) + dot(dot(2,lambda_),Dconv(real(multiply(multiply(w.conj(),1j.conj()),(w - b0)))))
-# .\MEDI_L1.m:119
-        dx=np.real(cgsolve(A,- b,cg_tol,cg_max_iter,0))
-# .\MEDI_L1.m:123
-        res_norm_ratio=norm(ravel(dx)) / norm(ravel(x))
-# .\MEDI_L1.m:124
-        x=x + dx
-# .\MEDI_L1.m:125
-        wres=multiply(m,exp(dot(1j,(real(ifftn(multiply(D,fftn(x)))))))) - b0
-# .\MEDI_L1.m:127
-        cost_data_history[iter]=norm(ravel(wres),2)
-# .\MEDI_L1.m:129
-        cost=abs(multiply(wG,grad(x)))
-# .\MEDI_L1.m:130
-        cost_reg_history[iter]=sum(ravel(cost))
-# .\MEDI_L1.m:131
-        if merit:
-            wres=wres - mean(wres(ravel(Mask) == 1))
-# .\MEDI_L1.m:135
-            a=wres(ravel(Mask) == 1)
-# .\MEDI_L1.m:136
-            factor=dot(std(abs(a)),6)
-# .\MEDI_L1.m:137
-            wres=abs(wres) / factor
-# .\MEDI_L1.m:138
-            wres[wres < 1]=1
-# .\MEDI_L1.m:139
-            badpoint[wres > 1]=1
-# .\MEDI_L1.m:140
-            N_std[Mask == 1]=multiply(N_std(Mask == 1),wres(Mask == 1) ** 2)
-# .\MEDI_L1.m:141
-            tempn=double(N_std)
-# .\MEDI_L1.m:142
-            if (smv):
-                tempn=sqrt(SMV(tempn ** 2,SphereK) + tempn ** 2)
-# .\MEDI_L1.m:144
-            m=dataterm_mask(data_weighting_mode,tempn,Mask)
-# .\MEDI_L1.m:146
-            b0=multiply(m,exp(dot(1j,RDF)))
-# .\MEDI_L1.m:147
-        fprintf('iter: %d; res_norm_ratio:%8.4f; cost_L2:%8.4f; cost:%8.4f.\n',iter,res_norm_ratio,cost_data_history(iter),cost_reg_history(iter))
-        toc
+            LT_reg=lambda x=None: multiply(Mask_CSF,(x - mean(x[Mask_CSF])))
+    # .\MEDI_L1.m:91
+        
+        
+        iter=0
+    # .\MEDI_L1.m:94
+        x=np.zeros(matrix_size)
+    # .\MEDI_L1.m:95
+        
+        if (logical_not(isempty(findstr(upper(Debug_Mode),'SAVEITER')))):
+            store_CG_results(multiply(dot(x / (dot(dot(dot(2,pi),delta_TE),CF)),1000000.0),Mask))
+        
+        res_norm_ratio=np.inf
+    # .\MEDI_L1.m:99
+        cost_data_history=np.zeros(1,max_iter)
+    # .\MEDI_L1.m:100
+        cost_reg_history=np.zeros(1,max_iter)
+    # .\MEDI_L1.m:101
+        e=1e-06
+    # .\MEDI_L1.m:103
+        
+        badpoint=np.zeros(matrix_size)
+    # .\MEDI_L1.m:104
+        Dconv=lambda dx=None: np.real(np.fft.ifftn(multiply(D,np.fft.fftn(dx))))
+    # .\MEDI_L1.m:105
+        while (res_norm_ratio > tol_norm_ratio) and (iter < max_iter):
 
-    
-    
-    
-    
-    #convert x to ppm
-    x=multiply(dot(x / (dot(dot(dot(2,pi),delta_TE),CF)),1000000.0),Mask)
-# .\MEDI_L1.m:159
-    
-    if flag_CSF:
-        x=x - mean(x(Mask_CSF))
-# .\MEDI_L1.m:163
-    
-    
-    if (matrix_size0):
-        x=x(arange(1,matrix_size0(1)),arange(1,matrix_size0(2)),arange(1,matrix_size0(3)))
-# .\MEDI_L1.m:167
-        iMag=iMag(arange(1,matrix_size0(1)),arange(1,matrix_size0(2)),arange(1,matrix_size0(3)))
-# .\MEDI_L1.m:168
-        RDF=RDF(arange(1,matrix_size0(1)),arange(1,matrix_size0(2)),arange(1,matrix_size0(3)))
-# .\MEDI_L1.m:169
-        Mask=Mask(arange(1,matrix_size0(1)),arange(1,matrix_size0(2)),arange(1,matrix_size0(3)))
-# .\MEDI_L1.m:170
-        matrix_size=copy(matrix_size0)
-# .\MEDI_L1.m:171
-    
-    
-    resultsfile=store_QSM_results(x,iMag,RDF,Mask,'Norm','L1','Method','MEDIN','Lambda',lambda_,'SMV',smv,'Radius',radius,'IRLS',merit,'voxel_size',voxel_size,'matrix_size',matrix_size,'Data_weighting_mode',data_weighting_mode,'Gradient_weighting_mode',gradient_weighting_mode,'L1_tol_ratio',tol_norm_ratio,'Niter',iter,'CG_tol',cg_tol,'CG_max_iter',cg_max_iter,'B0_dir',B0_dir)
+            tic
+            iter=iter + 1
+    # .\MEDI_L1.m:108
+            Vr=1.0 / sqrt(abs(multiply(wG,grad(np.real(x),voxel_size))) ** 2 + e)
+    # .\MEDI_L1.m:109
+            w=multiply(m,exp(dot(1j,np.fft.ifftn(multiply(D,np.fft.fftn(x))))))
+    # .\MEDI_L1.m:110
+            reg=lambda dx=None: div(multiply(wG,(multiply(Vr,(multiply(wG,grad(np.real(dx),voxel_size)))))),voxel_size)
+    # .\MEDI_L1.m:111
+            if flag_CSF:
+                reg_CSF=lambda dx=None: multiply(lam_CSF,LT_reg(LT_reg(real(dx))))
+    # .\MEDI_L1.m:113
+                reg=lambda dx=None: reg(dx) + reg_CSF(dx)
+    # .\MEDI_L1.m:114
+            fidelity=lambda dx=None: Dconv(multiply(multiply(w.conj(),w),Dconv(dx)))
+    # .\MEDI_L1.m:116
+            A=lambda dx=None: reg(dx) + dot(dot(2,lambda_),fidelity(dx))
+    # .\MEDI_L1.m:118
+            b=reg(x) + dot(dot(2,lambda_),Dconv(real(multiply(multiply(w.conj(),1j.conj()),(w - b0)))))
+    # .\MEDI_L1.m:119
+            dx=np.real(cgsolve(A,- b,cg_tol,cg_max_iter,0))
+    # .\MEDI_L1.m:123
+            res_norm_ratio=norm(ravel(dx)) / norm(ravel(x))
+    # .\MEDI_L1.m:124
+            x=x + dx
+    # .\MEDI_L1.m:125
+            wres=multiply(m,exp(dot(1j,(real(ifftn(multiply(D,fftn(x)))))))) - b0
+    # .\MEDI_L1.m:127
+            cost_data_history[iter]=norm(ravel(wres),2)
+    # .\MEDI_L1.m:129
+            cost=abs(multiply(wG,grad(x)))
+    # .\MEDI_L1.m:130
+            cost_reg_history[iter]=sum(ravel(cost))
+    # .\MEDI_L1.m:131
+            if merit:
+                wres=wres - mean(wres(ravel(Mask) == 1))
+    # .\MEDI_L1.m:135
+                a=wres(ravel(Mask) == 1)
+    # .\MEDI_L1.m:136
+                factor=dot(std(abs(a)),6)
+    # .\MEDI_L1.m:137
+                wres=abs(wres) / factor
+    # .\MEDI_L1.m:138
+                wres[wres < 1]=1
+    # .\MEDI_L1.m:139
+                badpoint[wres > 1]=1
+    # .\MEDI_L1.m:140
+                N_std[Mask == 1]=multiply(N_std(Mask == 1),wres(Mask == 1) ** 2)
+    # .\MEDI_L1.m:141
+                tempn=double(N_std)
+    # .\MEDI_L1.m:142
+                if (smv):
+                    tempn=sqrt(SMV(tempn ** 2,SphereK) + tempn ** 2)
+    # .\MEDI_L1.m:144
+                m=dataterm_mask(data_weighting_mode,tempn,Mask)
+    # .\MEDI_L1.m:146
+                b0=multiply(m,exp(dot(1j,RDF)))
+    # .\MEDI_L1.m:147
+            fprintf('iter: %d; res_norm_ratio:%8.4f; cost_L2:%8.4f; cost:%8.4f.\n',iter,res_norm_ratio,cost_data_history(iter),cost_reg_history(iter))
+            toc
+
+        
+        
+        
+        
+        #convert x to ppm
+        x=multiply(dot(x / (dot(dot(dot(2,pi),delta_TE),CF)),1000000.0),Mask)
+    # .\MEDI_L1.m:159
+        
+        if flag_CSF:
+            x=x - mean(x(Mask_CSF))
+    # .\MEDI_L1.m:163
+        
+        
+        if (matrix_size0):
+            x=x(arange(1,matrix_size0(1)),arange(1,matrix_size0(2)),arange(1,matrix_size0(3)))
+    # .\MEDI_L1.m:167
+            iMag=iMag(arange(1,matrix_size0(1)),arange(1,matrix_size0(2)),arange(1,matrix_size0(3)))
+    # .\MEDI_L1.m:168
+            RDF=RDF(arange(1,matrix_size0(1)),arange(1,matrix_size0(2)),arange(1,matrix_size0(3)))
+    # .\MEDI_L1.m:169
+            Mask=Mask(arange(1,matrix_size0(1)),arange(1,matrix_size0(2)),arange(1,matrix_size0(3)))
+    # .\MEDI_L1.m:170
+            matrix_size=copy(matrix_size0)
+    # .\MEDI_L1.m:171
+        
+        
+        resultsfile=store_QSM_results(x,iMag,RDF,Mask,'Norm','L1','Method','MEDIN','Lambda',lambda_,'SMV',smv,'Radius',radius,'IRLS',merit,'voxel_size',voxel_size,'matrix_size',matrix_size,'Data_weighting_mode',data_weighting_mode,'Gradient_weighting_mode',gradient_weighting_mode,'L1_tol_ratio',tol_norm_ratio,'Niter',iter,'CG_tol',cg_tol,'CG_max_iter',cg_max_iter,'B0_dir',B0_dir)
 # .\MEDI_L1.m:174
-    return x,cost_reg_history,cost_data_history
-    
+        
+        return x,cost_reg_history,cost_data_history
+    if 'gaussnewton' == solver:
+        x,cost_reg_history,cost_data_history=gaussnewton()
+    return x,cost_reg_history, cost_data_history, resultsfile
 if __name__ == '__main__':
     pass

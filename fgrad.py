@@ -20,11 +20,11 @@ def fgrad(chi=None,voxel_size=np.array([1,1,1])):
     
     # chi = double(chi);
     
-    Dx=np.concatenate((chi[1:,:,:],chi[-1,:,:])) - chi
+    Dx=np.concatenate((chi[1:,:,:],chi[-1:,:,:])) - chi
 # .\fgrad.m:21
-    Dy=np.concatenate((chi[:,1:,:],chi[:,-1,:]),axis=1) - chi
+    Dy=np.concatenate((chi[:,1:,:],chi[:,-1:,:]),axis=1) - chi
 # .\fgrad.m:22
-    Dz=np.concatenate((chi[:,:,1:],chi[:,:,-1]),axis=2) - chi
+    Dz=np.concatenate((chi[:,:,1:],chi[:,:,-1:]),axis=2) - chi
 # .\fgrad.m:23
     Dx=Dx / voxel_size[0]
 # .\fgrad.m:25
@@ -32,7 +32,7 @@ def fgrad(chi=None,voxel_size=np.array([1,1,1])):
 # .\fgrad.m:26
     Dz=Dz / voxel_size[2]
 # .\fgrad.m:27
-    Gx=np.concatenate((Dx,Dy,Dz),axis=3)
+    Gx=np.concatenate((Dx[:,:,:,np.newaxis],Dy[:,:,:,np.newaxis],Dz[:,:,:,np.newaxis]),axis=3)
 # .\fgrad.m:29
     return Gx
     

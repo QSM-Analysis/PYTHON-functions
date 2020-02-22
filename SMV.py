@@ -2,7 +2,7 @@
 from smop.libsmop import *
 import numpy as np
 from numpy import dot,max
-import sphere_kernel
+from sphere_kernel import*
 # .\SMV.m
 
     # Spherical Mean Value operator
@@ -22,7 +22,6 @@ import sphere_kernel
     
 
 def SMV(iFreq=None,varargin=None,*args,**kwargs):
-
     if 1 == len(varargin):
         K=varargin[0]
 # .\SMV.m:19
@@ -42,3 +41,4 @@ def SMV(iFreq=None,varargin=None,*args,**kwargs):
     
     y=np.fft.ifftn(multiply(np.fft.fftn(iFreq),K))
 # .\SMV.m:31
+    return y
