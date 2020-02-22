@@ -1,7 +1,4 @@
 # Generated with SMOP  0.41
-from smop.libsmop import *
-#import tensorflow as tf
-import sys
 # Fit_ppm_complex.m
 
     # Projection onto Dipole Fields (PDF)
@@ -29,15 +26,20 @@ import sys
     #   Adapted from a linear fitting created by Ludovic de Rochefort
 #   Modified by Tian Liu on 2011.06.01
 #   Last modified by Alexey Dimov on 2016.05.12
-    
+
+import sys    
 import numpy as np
-from numpy import zeros, min, pi, abs,ones,dot, multiply,sum
+from numpy import zeros, min, pi, abs,ones, dot, multiply, exp, mod, conj, angle, sqrt,\
+    arange, floor, ceil
+from numpy.matlib import repmat
+# dytpe='single'
 
 class opts0:
     def __init__(self):
         self.reltol= 0.0001
         self.max_iter = 30
 defopts=opts0()
+
 def Fit_ppm_complex(M=None,opts=defopts):
 #     defopts.reltol = copy(0.0001)
 #     defopts.max_iter = copy(30)
@@ -46,16 +48,15 @@ def Fit_ppm_complex(M=None,opts=defopts):
     bytes=len(M)*65536*16
     
     if (bytes > 1000000000.0):
-        sz=shape(M)
-        numpy.zeros
+        sz = M.shape
         p1=zeros(M.shape[:3],M.dtype)
         dp1=zeros(M.shape[:3],M.dtype)
         relres=zeros(M.shape[:3],M.dtype)
         p0=zeros(M.shape[:3],M.dtype)
         n=ceil(bytes / 1000000000.0)
         ns=floor(sz(3) / n)
-        for slice in arange(1,sz(3),ns).reshape(-1):
-            rng=arange(slice,min(slice + ns - 1,sz(3)))
+        for slc in arange(1,sz(3),ns).reshape(-1):
+            rng=arange(slc,min(slc + ns - 1,sz(3)))
             print('fitting slice '+str(rng(1))+' through '+str(rng(-1),' ...'))
             p1[:,:,rng],dp1[:,:,rng],relres[:,:,rng],p0[:,:,rng]=Fit_ppm_complex(M[:,:,rng,:,:],nargout=4)
         
@@ -73,7 +74,7 @@ def Fit_ppm_complex(M=None,opts=defopts):
         
         if M.shape[4] > 1:
         # combine multiple coils together, assuming the coil is the fifth dimension
-            M=sum(multiply(M,conj(repmat(M[:,:,:,1,:],concat([1,1,1,shape(M,4),1])))),5)
+            M=np.sum(multiply(M,conj(repmat(M[:,:,:,1,:],concat([1,1,1,shape(M,4),1])))),5)
             M=multiply(sqrt(abs(M)),exp(dot(1j,angle(M))))
     
     # determine angle
@@ -131,7 +132,7 @@ def Fit_ppm_complex(M=None,opts=defopts):
     p0=np.array(ip[0,:]).conj().T
 # Fit_ppm_complex.m:97
     p1=np.array(ip[1,:]).conj().T
-# Fit_ppm_complex.m:98
+# Fit_dppm_complex.m:98
     dp1=p1.copy()
 # Fit_ppm_complex.m:100
     tol=dot(np.linalg.norm(p1[:]),opts.reltol)
@@ -142,20 +143,21 @@ def Fit_ppm_complex(M=None,opts=defopts):
     
     # weigthed least square
 # calculation of WA'*WA
-    numpy.ones
     
     v1=ones((1,nechos),M.dtype)
     
 # Fit_ppm_complex.m:107
     #v2=cast((arange(0,(nechos - 1))),M.dtype)
     v2=np.array([[i for i in range(nechos)]])
-
+    
 # Fit_ppm_complex.m:108
-    a11=sum(multiply(abs(M) ** 2.0,(dot(ones((s[0],1),M.dtype),(v1 ** 2)))),2)
+    a11=np.sum((abs(M) ** 2.0) * (ones((s[0],1),M.dtype)*(v1*v1)),axis=1)
 # Fit_ppm_complex.m:114
-    a12=sum(multiply(abs(M) ** 2.0,(dot(ones((s[0],1),M.dtype),(multiply(v1,v2))))),2)
+    a12=np.sum((abs(M) ** 2.0) * (ones((s[0],1),M.dtype)*(v1*v2)),axis=1)
+    # a12=sum(multiply(abs(M) ** 2.0,(dot(ones((s[0],1),M.dtype),(multiply(v1,v2))))),2)
 # Fit_ppm_complex.m:115
-    a22=sum(multiply(abs(M) ** 2.0,(dot(ones((s[0],1),M.dtype),(v2 ** 2)))),2)
+    a22=np.sum((abs(M) ** 2.0) * (ones((s[0],1),M.dtype)*(v2*v2)),axis=1)
+    #a22=sum(multiply(abs(M) ** 2.0,(dot(ones((s[0],1),M.dtype),(v2 ** 2)))),2)
 # Fit_ppm_complex.m:111
     # inversion
     d=multiply(a11,a22) - a12 ** 2
@@ -170,18 +172,18 @@ def Fit_ppm_complex(M=None,opts=defopts):
 
         iter=iter + 1
 # Fit_ppm_complex.m:119
-        W=abs(M)*exp(multiply(1j,(dot(p0,v1) + dot(p1,v2))))
+        W=abs(M)*exp(1j*(dot(p0,v1) + dot(p1,v2)))
         
 # Fit_ppm_complex.m:120
-        pr1=sum(multiply(multiply(np.conj(dot(1j,W)),(dot(ones((s[0],1),M.dtype),v1))),(M - W)),2)
-        #pr1=sum(np.conj(dot(1j,W))*(multiply(ones((s[0],1),M.dtype),v1))*(M - W),2)
-        
+        #pr1=sum(multiply(multiply(np.conj(dot(1j,W)),(dot(ones((s[0],1),M.dtype),v1))),(M - W)),2)
+        pr1 = np.sum(np.conj(1j*W)*(ones((s[0],1),M.dtype)*v1)*(M-W),axis=1)
 # Fit_ppm_complex.m:123
-        pr2=sum(multiply(multiply(np.conj(dot(1j,W)),(dot(ones((s[0],1),M.dtype),v2))),(M - W)),2)
+        #pr2=sum(multiply(multiply(np.conj(dot(1j,W)),(dot(ones((s[0],1),M.dtype),v2))),(M - W)),2)
+        pr2 = np.sum(np.conj(1j*W)*(ones((s[0],1),M.dtype)*v2)*(M-W),axis=1)
 # Fit_ppm_complex.m:124
-        dp0=np.array([np.real(multiply(ai11,pr1) + multiply(ai12,pr2))]).T
+        dp0=np.real(ai11*pr1 + ai12*pr2).reshape([ai11.size,1])
 # Fit_ppm_complex.m:126
-        dp1=np.array([np.real(multiply(ai12,pr1) + multiply(ai22,pr2))]).T
+        dp1=np.real(ai12*pr1 + ai22*pr2).reshape([ai11.size,1])
 # Fit_ppm_complex.m:127
         dp1[np.isnan(dp1)]=0
 # Fit_ppm_complex.m:128
@@ -201,9 +203,9 @@ def Fit_ppm_complex(M=None,opts=defopts):
     dp1[np.isinf(dp1)]=0
 # Fit_ppm_complex.m:141
     # relative residual
-    res=M - multiply(abs(M),exp(dot(1j,(dot(p0,v1) + dot(p1,v2)))))
+    res=M - abs(M)*exp(1j*(dot(p0,v1) + dot(p1,v2)))
 # Fit_ppm_complex.m:144
-    relres=sum(abs(res) ** 2,2) / sum(abs(M) ** 2,2)
+    relres=np.sum(abs(res) ** 2,axis=1) / np.sum(abs(M) ** 2,axis=1)
 # Fit_ppm_complex.m:145
     relres[np.isnan(relres)]=0
 # Fit_ppm_complex.m:146

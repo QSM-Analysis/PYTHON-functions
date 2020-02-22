@@ -29,7 +29,7 @@ from Fit_ppm_complex import Fit_ppm_complex
 
    
 data=scio.loadmat('medi_siemens_data.mat')
-iField=data['iField']
+iField=data['iField'].astype(np.float16)
 
 iMag=np.sqrt(np.sum(abs(iField) ** 2,3))
 iFreq_raw,N_std,a,b=Fit_ppm_complex(iField)
