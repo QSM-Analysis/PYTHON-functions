@@ -19,10 +19,13 @@ from numpy import dot,sum
 #   Modified by Tian on 2011.02.01
 #   Modified by Tian on 2011.03.14 The sphere is now rendered.
 #   Last modified by Tian Liu on 2013.07.23
-    
-    
+  
 def sphere_kernel(matrix_size=None,voxel_size=None,radius=None,*args,**kwargs):
-
+    radius=float(radius)
+    matrix_size=np.array(matrix_size[0])
+# .\dipole_kernel.m:76
+    #voxel_size=varargin[1]
+    voxel_size=np.array(voxel_size.T[0])
     (Y,X,Z)=np.meshgrid(np.arange(-matrix_size[1]/2,matrix_size[1]/2), np.arange(-matrix_size[0]/2,matrix_size[0]/2), np.arange(-matrix_size[2]/2,matrix_size[2]/2))
 # .\sphere_kernel.m:19
     X=dot(X,voxel_size[0])
@@ -31,11 +34,17 @@ def sphere_kernel(matrix_size=None,voxel_size=None,radius=None,*args,**kwargs):
 # .\sphere_kernel.m:24
     Z=dot(Z,voxel_size[2])
 # .\sphere_kernel.m:25
-    Sphere_out=(np.max([abs(X) - dot(0.5,voxel_size[0]),0]) ** 2 + np.max([abs(Y) - dot(0.5,voxel_size[1]),0]) ** 2 + np.max([abs(Z) - dot(0.5,voxel_size[2]),0]) ** 2) > radius ** 2
+    a=abs(X) - dot(0.5,voxel_size[0])
+    a[a<0]=0
+    b=abs(Y) - dot(0.5,voxel_size[1])
+    b[b<0]=0
+    c=abs(Z) - dot(0.5,voxel_size[2])
+    c[c<0]=0
+    Sphere_out=(a ** 2 + b ** 2 + c ** 2) > (radius ** 2)
 # .\sphere_kernel.m:26
     Sphere_in=((abs(X) + dot(0.5,voxel_size[0])) ** 2 + (abs(Y) + dot(0.5,voxel_size[1])) ** 2 + (abs(Z) + dot(0.5,voxel_size[2])) ** 2) <= radius ** 2
 # .\sphere_kernel.m:30
-    Sphere_mid=np.zeros(matrix_size)
+    Sphere_mid=np.zeros(matrix_size.astype(int))
 # .\sphere_kernel.m:35
     split=10
 # .\sphere_kernel.m:37
@@ -56,7 +65,7 @@ def sphere_kernel(matrix_size=None,voxel_size=None,radius=None,*args,**kwargs):
 # .\sphere_kernel.m:45
     Z=Z[shell == 1]
 # .\sphere_kernel.m:46
-    shell_val=np.zeros(X.shape())
+    shell_val=np.zeros(X.shape)
 # .\sphere_kernel.m:47
     for i in range(len(X)):
         xx=X[i]
@@ -78,3 +87,7 @@ def sphere_kernel(matrix_size=None,voxel_size=None,radius=None,*args,**kwargs):
 # .\sphere_kernel.m:63
     y=np.fft.fftn(np.fft.fftshift(Sphere))
 # .\sphere_kernel.m:64
+    return y
+
+if __name__=='__main__':
+    pass

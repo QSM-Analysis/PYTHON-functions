@@ -2,6 +2,7 @@
 from smop.libsmop import *
 import numpy as np
 import scipy.io as scio
+from numpy import sum
 # .\parse_QSM_input.m
 
     # An interal function to parse input arguments for MEDI_L1
@@ -10,7 +11,6 @@ import scipy.io as scio
 #   Last modified by Tian Liu on 2013.07.24
     
 def parse_QSM_input(varargin=None,*args,**kwargs):
-
     merit=0
 # .\parse_QSM_input.m:10
     smv=0
@@ -23,7 +23,7 @@ def parse_QSM_input(varargin=None,*args,**kwargs):
 # .\parse_QSM_input.m:14
     gradient_weighting=1
 # .\parse_QSM_input.m:15
-    pad=0
+    pad=np.array([0])
 # .\parse_QSM_input.m:16
     matrix_size0=0
 # .\parse_QSM_input.m:17
@@ -34,10 +34,11 @@ def parse_QSM_input(varargin=None,*args,**kwargs):
     # CSF regularization
     lam_CSF=100
 # .\parse_QSM_input.m:21
-    filename=np.array(['RDF.mat'])
+#    filename='RDF.mat'
+    filename='medi_siemens_data.mat'
 # .\parse_QSM_input.m:22
-    if varargin.shape[1] > 0:
-        for k in range(varargin.shape[1]):
+    if varargin.shape[0] > 0:
+        for k in range(varargin.shape[0]):
             if varargin[k].lower()=='filename':
                 filename=varargin[k + 1]
 # .\parse_QSM_input.m:26
@@ -82,7 +83,7 @@ def parse_QSM_input(varargin=None,*args,**kwargs):
     voxel_size=data['voxel_size']
     delta_TE=data['delta_TE']
     CF=data['CF']
-    B0_dir=data['B0_dir']
+    B0_dir=np.array(data['B0_dir'].T[0])
 
     # CSF regularization
 #    if ismember('Mask_CSF',who('-file',filename)):
@@ -94,17 +95,17 @@ def parse_QSM_input(varargin=None,*args,**kwargs):
         Mask_CSF=np.array([])
 # .\parse_QSM_input.m:64
 
-    if 'delta_TE' in locals().keys():
+    if not 'delta_TE' in locals().keys():
         delta_TE=input('TE spacing = ')
         with open(filename,'ab') as f:
             scio.savemat(f,{'delta_TE':delta_TE})
 
-    if 'CF' in locals().keys():
+    if not 'CF' in locals().keys():
         CF=input('Central Frequency = ')
         with open(filename,'ab') as f:
             scio.savemat(f,{'CF':CF})
     
-    if 'B0_dir' in locals().keys():
+    if not 'B0_dir' in locals().keys():
         B0_dir=input('B0 direction = ')
         with open(filename,'ab') as f:
             scio.savemat(f,{'B0_dir':B0_dir})

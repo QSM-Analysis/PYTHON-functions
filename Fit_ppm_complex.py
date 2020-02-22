@@ -31,8 +31,8 @@ import sys
 #   Last modified by Alexey Dimov on 2016.05.12
     
 import numpy as np
-from numpy import zeros, min, pi, abs,ones
-dytpe='single'
+from numpy import zeros, min, pi, abs,ones,dot, multiply,sum
+
 class opts0:
     def __init__(self):
         self.reltol= 0.0001
@@ -66,8 +66,8 @@ def Fit_ppm_complex(M=None,opts=defopts):
     #Modification to handle one echo datasets - assuming zero phase at TE = 0;
     #- AD, 05/12/2016
     if M.shape[3] == 1:
-        M = cat(4,abs(M),M)
-        M = np.concatenate((M,abs(M)))
+    #   M = cat(4,abs(M),M)
+        M = np.concatenate((abs(M),M),axis=3)
 
     if len(M.shape)>4:
         
@@ -84,15 +84,16 @@ def Fit_ppm_complex(M=None,opts=defopts):
         nechos=M.shape[L_s0-1]
     else:
         nechos=1
-    M=np.reshape(M,[np.prod(M.shape[:-1]),M.shape[-1]])
+    # M=np.reshape(M,[np.prod(M.shape[:-1]),M.shape[-1]])
+    M=np.reshape(M,[np.prod(s0[:(L_s0-1)]),s0[L_s0-1]])
     s=M.shape
-    Y=np.angle(M[:,:np.min([3,M.shape[-1]])])
+    Y=np.angle(M[:,:np.min([3,nechos])])
     c=Y[:,1] - Y[:,0]
     temp = np.array([abs(c-2*pi),abs(c),abs(c+2*pi)])
     m = temp.min(1)
     ind = temp.argmin(1)
     k=ind
-    for i in range( len(ind)):
+    for i in range(len(ind)):
         if ind[i]==0:
             k[i]=1
         else:
@@ -124,14 +125,14 @@ def Fit_ppm_complex(M=None,opts=defopts):
     A=np.array([[1,0],[1,1],[1,2]])
 # Fit_ppm_complex.m:95
     #ip = A(1:min(3,nechos),:)\Y(:,1:min(3,nechos))';
-    ip=np.linalg.solve(A[1:min([3,nechos]),:],Y[:,1:min([3,nechos])].T)
-    
+    ip=dot(np.mat(A[:min([3,nechos]),:]).I,Y[:,:min([3,nechos])].conj().T)
+
 # Fit_ppm_complex.m:96
-    p0=np.array([ip[0,:]]).T
+    p0=np.array(ip[0,:]).conj().T
 # Fit_ppm_complex.m:97
-    p1=np.array([ip[1,:]]).T
+    p1=np.array(ip[1,:]).conj().T
 # Fit_ppm_complex.m:98
-    dp1=copy(p1)
+    dp1=p1.copy()
 # Fit_ppm_complex.m:100
     tol=dot(np.linalg.norm(p1[:]),opts.reltol)
 # Fit_ppm_complex.m:101
@@ -148,7 +149,7 @@ def Fit_ppm_complex(M=None,opts=defopts):
 # Fit_ppm_complex.m:107
     #v2=cast((arange(0,(nechos - 1))),M.dtype)
     v2=np.array([[i for i in range(nechos)]])
-    
+
 # Fit_ppm_complex.m:108
     a11=sum(multiply(abs(M) ** 2.0,(dot(ones((s[0],1),M.dtype),(v1 ** 2)))),2)
 # Fit_ppm_complex.m:114
@@ -209,7 +210,6 @@ def Fit_ppm_complex(M=None,opts=defopts):
     p1[p1 > pi]=mod(p1[p1 > pi] + pi,dot(2,pi)) - pi
 # Fit_ppm_complex.m:148
     p1[p1 < - pi]=mod(p1[p1 < - pi] + pi,dot(2,pi)) - pi
-    print(p0.shape)
 # Fit_ppm_complex.m:149
     p0=np.reshape(p0,s0[:(L_s0-1)])
 # Fit_ppm_complex.m:151
