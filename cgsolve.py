@@ -1,14 +1,14 @@
 # Generated with SMOP  0.41
 import numpy as np
-import scipy.io as scio
+
 
 def cgsolve(A,b,tol,maxiter,verbose=None,x0=None):
     
     
-    matrix_size = len(b)
+    matrix_size = b.shape
     b = b.flatten(1)
     implicit = isinstance(A,type(cgsolve))
-    x = np.zeros((len(b),1))
+    x = np.zeros(((len(b)),1))
     if x0 == None:
         x = np.zeros((len(b),1))
         r = b  
@@ -25,39 +25,39 @@ def cgsolve(A,b,tol,maxiter,verbose=None,x0=None):
     
     
     d = r
-    delta = r.conj().T*r
-    delta = np.array(delta)
-    delta0 = (b.conj().T)*b
+    delta = np.dot(r.conj().T,r)
+    
+    delta0 = np.dot((b.conj().T),b)
     numiter = 0
     bestx= x
     bestres = np.sqrt(delta/delta0)
-    print('aa',bestres)
-    while np.logical_and((numiter < maxiter), (delta> tol**2*delta0) ):
+    
+    while np.logical_and((numiter < maxiter), (delta> tol**2*delta0)):
         #q = A*d
         if implicit:
             q = A(np.reshape(d,matrix_size))
             q = q.reshape(1,-1)
         else:
             q = A*d
-        alpha = delta/((d.conj().T)*q)
-        print(alpha)
-        x = x + d.dot(alpha)
+        alpha = delta/np.dot((d.conj().T),q)
+        print('alpha')
+        x = x + np.dot(alpha,d)
         if (numiter+1) % 50 == 0:
             # r = b - Aux*x
             if implicit:
                 r = b - np.reshape(A(np.reshape(x,matrix_size)),len(b))
             else:
-                r = b - A*x
+                r = b - np.dot(A,x)
         else:
-            r = r - q.dot(alpha)
+            r = r - np.dot(alpha,b)
 
         deltaold = delta
-        delta = (r.conj().T)*r
+        delta = np.dot((r.conj().T),r)
         beta = delta / deltaold
-        d = r + d.dot(beta)
+        d = r + beta*d
         numiter = numiter + 1
-        item = np.mat(np.sqrt(delta/delta0))
-        if (item.any()<bestres.any()):
+       
+        if (np.sqrt(delta/delta0) < bestres):
             bestx = x
             bestres = np.sqrt(delta/delta0)
 
