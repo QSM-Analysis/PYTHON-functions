@@ -1,11 +1,10 @@
 # Generated with SMOP  0.41
-#from smop.libsmop import *
+from smop.libsmop import *
 import pandas as pd
 import numpy as np
 from dipole_kernel import*
 from cgsolve import*
 from dipole_term import*
-from numpy import ravel
 # PDF.m
 
     # Projection onto Dipole Fields (PDF)
@@ -33,49 +32,39 @@ from numpy import ravel
 #   Last modified by Tian Liu on 2013.07.24
     
 
-def PDF(iFreq=None,N_std=None,Mask=None,matrix_size=None,voxel_size=None,B0_dir=None,tol=None,n_CG=None,space=None,n_pad=None,*args,**kwargs):
-    nargin=0
-    nargout=1
-    if (nargin < 10):
-        n_pad=40
-# PDF.m:29
+def PDF(iFreq=None,N_std=None,Mask=None,matrix_size=None,voxel_size=None,B0_dir=None,tol=0.1,n_CG=30,space='imagespace',n_pad=40,*args,**kwargs):
     
-    if (nargin < 9):
-        space='imagespace'
-# PDF.m:33
-    
-    if (nargin < 8):
-        n_CG=30
-# PDF.m:37
-    
-    if (nargin < 7):
-        tol=0.1
 # PDF.m:41
     
     # zero pad
-    matrix_size0 = matrix_size.copy()
+    matrix_size0=copy(matrix_size)
+    
 # PDF.m:46
-    d1 = Mask.max(2).max(1)
+    d1=Mask.max(axis=1)
+   
+    #d1=Mask.reshape((int(matrix_size[0][0]),1,int(matrix_size[0][2])))
+    d1=d1.max(axis=1)
+    
 # PDF.m:47
     d1first=np.floor((np.transpose(np.nonzero(d1)))[0])
 # PDF.m:48
     d1last=np.floor((np.transpose(np.nonzero(d1)))[-1])
 # PDF.m:49
-    d2 = Mask.max(2).max(0)
+    d2=((Mask.max(axis=2)).max(axis=0))
 # PDF.m:51
     d2first=np.floor((np.transpose(np.nonzero(d2)))[0])
 # PDF.m:52
     d2last=np.floor((np.transpose(np.nonzero(d2)))[-1])
 # PDF.m:53
-    d3=Mask.max(1).max(0)
+    d3=Mask.max(axis=0).max(axis=0)
 # PDF.m:55
     d3first=np.floor((np.transpose(np.nonzero(d3)))[0])
 # PDF.m:56
     d3last=np.floor((np.transpose(np.nonzero(d3)))[-1])
-    
+   
 # PDF.m:57
     if n_pad > 0:
-        matrix_size=[np.floor((d1last - d1first + n_pad) / 2) * 2,np.floor((d2last - d2first + n_pad) / 2)*2, np.floor((d3last - d3first + n_pad) / 2)*2]
+        matrix_size=np.concatenate([np.dot(np.floor((d1last - d1first + n_pad) / 2),2),np.dot(np.floor((d2last - d2first + n_pad) / 2),2),np.dot(np.floor((d3last - d3first + n_pad) / 2),2)])
 # PDF.m:60
         #iFreq=iFreq[np.transpose(arange(d1first,d1last)),np.transpose(arange(d2first,d2last)),np.transpose(arange(d3first,d3last))] 
         iFreq=np.array(iFreq)[int(d1first[0]):int(d1last[0]),int(d2first[0]):int(d2last[0]),int(d3first[0]):int(d3last[0])]
@@ -99,40 +88,52 @@ def PDF(iFreq=None,N_std=None,Mask=None,matrix_size=None,voxel_size=None,B0_dir=
     W[np.isinf(W)]=0
 # PDF.m:75
     W=W*(Mask > 0)
+    print('W',W.shape)
 # PDF.m:76
-    W_std = W.copy()#copy(W)
+    W_std=np.copy(W)
 # PDF.m:77
     W_var=W ** 2
+    print('W_var',W_var.shape)
 # PDF.m:78
     ###### start the PDF method #####
     #if norm(ravel(B0_dir),1) < 1.01:
     
     print('matrix_size=',matrix_size,'voxel_size=',voxel_size,'B0_dir=',B0_dir)
-    if np.linalg.norm(ravel(B0_dir),1)<1.01:
+    if np.linalg.norm(B0_dir.flatten(1),1)<1.01:
         
         D=dipole_kernel([matrix_size,voxel_size,B0_dir])
 # PDF.m:82
     else:
         D=dipole_kernel([matrix_size,voxel_size,B0_dir,space])
 # PDF.m:84
-    
+    print('D',D.shape)
     # generating the RHS vector in Eq. 6 in the PDF paper
     p_temp=np.real(np.fft.ifftn(D*np.fft.fftn(W_var*(iFreq))))
+    print('p_temp',p_temp.shape)
 # PDF.m:88
     b=p_temp[Mask == 0]
-    print('b=',b)
+    print('b',b.shape)
+    
 # PDF.m:89
     # set erance level and maximum iteration allowed
-    E_noise_level=np.real(np.fft.ifftn(multiply(D,np.fft.fftn(multiply(W_std,np.ones(np.shape(N_std)))))))
-# PDF.m:92
-    itermax=n_CG.copy()
+    E_noise_level=np.real(np.fft.ifftn(np.multiply(D,np.fft.fftn(np.multiply(W_std,np.ones(np.shape(N_std)))))))
+    print('E_noise_level',E_noise_level.shape)
+    itermax=np.copy(n_CG)
+    print('itermax=',itermax)
 # PDF.m:93
-    xx=None
-    A=dipole_term(W_var,D,Mask,xx)
     
+
+    A=dipole_term
+    global W_temp
+    global D_temp
+    global Mask_temp
+    W_temp=np.copy(W)
+    D_temp=np.copy(D)
+    Mask_temp=np.copy(Mask)
 # PDF.m:94
-    cg_tol=dot(tol,np.linalg.norm(E_noise_level[ravel(Mask) == np.zeros(D.shape)])) / np.linalg.norm(ravel(b))
+    cg_tol=np.dot(tol,np.linalg.norm(E_noise_level[Mask == 0]/ np.linalg.norm(b.flatten(1))))
 # PDF.m:95
+    print ('cg_tol',cg_tol)
     x,res,num_iter=cgsolve(A,b,cg_tol,itermax,0)
 # PDF.m:97
     print('CG stops at: res %f, iter %d\n',res,num_iter)
@@ -140,14 +141,14 @@ def PDF(iFreq=None,N_std=None,Mask=None,matrix_size=None,voxel_size=None,B0_dir=
     xx=np.zeros(np.size(D))
     
 # PDF.m:100
-    xx[ravel(Mask) == np.zeros(198*212*102)]=x
+    xx[Mask == 0]=x[1:-1]
 # PDF.m:101
-    xx[ravel(Mask) > np.zeros(198*212*102)]=np.zeros(np.size(D))
+    xx[Mask>0]=0
 # PDF.m:102
     # background dipole field
-    p_dipole=np.real(np.fft.ifftn(multiply(D,np.fft.fftn(xx))))
+    p_dipole=np.real(np.fft.ifftn((D*np.fft.fftn(xx))))
 # PDF.m:105
-    p_final=multiply((iFreq - p_dipole),Mask)
+    p_final=((iFreq - p_dipole)*Mask)
 # PDF.m:108
     # remove zero pad
     if n_pad > 0:
@@ -160,8 +161,8 @@ def PDF(iFreq=None,N_std=None,Mask=None,matrix_size=None,voxel_size=None,B0_dir=
         shim[d1first:d1last,d2first:d2last,d3first:d3last]=xx[1:d1last - d1first + 1,1:d2last - d2first + 1,1:d3last - d3first + 1]
 # PDF.m:117
     else:
-        RDF=copy(p_final)
+        RDF=np.copy(p_final)
 # PDF.m:120
-        shim=copy(xx)
+        shim=np.copy(xx)
 # PDF.m:121
     

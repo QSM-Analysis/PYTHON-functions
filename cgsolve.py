@@ -36,7 +36,7 @@ def cgsolve(A,b,tol,maxiter,verbose=None,x0=None):
         #q = A*d
         if implicit:
             q = A(np.reshape(d,matrix_size))
-            q = q.reshape(1,-1)
+            q = q.flatten(1)
         else:
             q = A*d
         alpha = delta/np.dot((d.conj().T),q)
