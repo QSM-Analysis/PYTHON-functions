@@ -14,3 +14,5 @@ B0_dir=scio.loadmat('matlabdata_ B0_dir_FOR RDF.mat')['B0_dir']
 N_std=scio.loadmat('matlabdata_N_std_FOR RDF.mat')['N_std']
 
 RDF=PDF(iFreq,N_std,Mask,matrix_size,voxel_size,B0_dir)
+print('RDF.shape=',RDF.shape)
+print('pass')

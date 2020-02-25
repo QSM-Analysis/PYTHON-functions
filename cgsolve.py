@@ -8,7 +8,7 @@ def cgsolve(A,b,tol,maxiter,verbose=None,x0=None):
     matrix_size = b.shape
     b = b.flatten(1)
     implicit = isinstance(A,type(cgsolve))
-    x = np.zeros(((len(b)),1))
+    x = np.zeros(((len(b))))
     if x0 == None:
         x = np.zeros((len(b),1))
         r = b  
@@ -37,11 +37,14 @@ def cgsolve(A,b,tol,maxiter,verbose=None,x0=None):
         if implicit:
             q = A(np.reshape(d,matrix_size))
             q = q.flatten(1)
+            
         else:
             q = A*d
         alpha = delta/np.dot((d.conj().T),q)
-        print('alpha')
-        x = x + np.dot(alpha,d)
+
+        temp=d*alpha
+        temp=temp[:,np.newaxis]
+        x = x+temp
         if (numiter+1) % 50 == 0:
             # r = b - Aux*x
             if implicit:

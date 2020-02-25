@@ -1,5 +1,4 @@
 # Generated with SMOP  0.41
-from smop.libsmop import *
 import pandas as pd
 import numpy as np
 from dipole_kernel import*
@@ -37,8 +36,10 @@ def PDF(iFreq=None,N_std=None,Mask=None,matrix_size=None,voxel_size=None,B0_dir=
 # PDF.m:41
     
     # zero pad
-    matrix_size0=copy(matrix_size)
-    
+    matrix_size0=np.copy(matrix_size)
+    matrix_size0=matrix_size0.astype(int)
+    matrix_size0=matrix_size0.flatten(1)
+    #matrix_size0=matrix_size0.conj().T
 # PDF.m:46
     d1=Mask.max(axis=1)
    
@@ -46,21 +47,21 @@ def PDF(iFreq=None,N_std=None,Mask=None,matrix_size=None,voxel_size=None,B0_dir=
     d1=d1.max(axis=1)
     
 # PDF.m:47
-    d1first=np.floor((np.transpose(np.nonzero(d1)))[0])
+    d1first=(np.transpose(np.nonzero(d1)))[0]
 # PDF.m:48
-    d1last=np.floor((np.transpose(np.nonzero(d1)))[-1])
+    d1last=(np.transpose(np.nonzero(d1)))[-1]
 # PDF.m:49
     d2=((Mask.max(axis=2)).max(axis=0))
 # PDF.m:51
-    d2first=np.floor((np.transpose(np.nonzero(d2)))[0])
+    d2first=(np.transpose(np.nonzero(d2)))[0]
 # PDF.m:52
-    d2last=np.floor((np.transpose(np.nonzero(d2)))[-1])
+    d2last=(np.transpose(np.nonzero(d2)))[-1]
 # PDF.m:53
     d3=Mask.max(axis=0).max(axis=0)
 # PDF.m:55
-    d3first=np.floor((np.transpose(np.nonzero(d3)))[0])
+    d3first=(np.transpose(np.nonzero(d3)))[0]
 # PDF.m:56
-    d3last=np.floor((np.transpose(np.nonzero(d3)))[-1])
+    d3last=((np.transpose(np.nonzero(d3)))[-1])
    
 # PDF.m:57
     if n_pad > 0:
@@ -73,7 +74,7 @@ def PDF(iFreq=None,N_std=None,Mask=None,matrix_size=None,voxel_size=None,B0_dir=
 # PDF.m:64
         Mask=Mask[int(d1first[0]):int(d1last[0]),int(d2first[0]):int(d2last[0]),int(d3first[0]):int(d3last[0])]
 # PDF.m:65
-        padsize=np.transpose([[int((matrix_size[0] - iFreq.shape[0])),int((matrix_size[1] - iFreq.shape[1])),int((matrix_size[2] - iFreq.shape[2]))],[0,0,0]])
+        padsize=([[0,int((matrix_size[0] - iFreq.shape[0]))],[0,int((matrix_size[1] - iFreq.shape[1]))],[0,int((matrix_size[2] - iFreq.shape[2]))]])
 # PDF.m:66
         iFreq=np.pad(iFreq,padsize,'constant')
 # PDF.m:67
@@ -116,7 +117,7 @@ def PDF(iFreq=None,N_std=None,Mask=None,matrix_size=None,voxel_size=None,B0_dir=
     
 # PDF.m:89
     # set erance level and maximum iteration allowed
-    E_noise_level=np.real(np.fft.ifftn(np.multiply(D,np.fft.fftn(np.multiply(W_std,np.ones(np.shape(N_std)))))))
+    E_noise_level=np.real(np.fft.ifftn((D*np.fft.fftn((W_std*np.ones(np.shape(N_std)))))))
     print('E_noise_level',E_noise_level.shape)
     itermax=np.copy(n_CG)
     print('itermax=',itermax)
@@ -138,10 +139,10 @@ def PDF(iFreq=None,N_std=None,Mask=None,matrix_size=None,voxel_size=None,B0_dir=
 # PDF.m:97
     print('CG stops at: res %f, iter %d\n',res,num_iter)
     print('x=',x)
-    xx=np.zeros(np.size(D))
+    xx=np.zeros(D.shape)
     
 # PDF.m:100
-    xx[Mask == 0]=x[1:-1]
+    xx[Mask == 0]=x
 # PDF.m:101
     xx[Mask>0]=0
 # PDF.m:102
@@ -154,15 +155,16 @@ def PDF(iFreq=None,N_std=None,Mask=None,matrix_size=None,voxel_size=None,B0_dir=
     if n_pad > 0:
         RDF=np.zeros(matrix_size0)
 # PDF.m:112
-        RDF[d1first:d1last,d2first:d2last,d3first:d3last]=p_final[1:d1last - d1first + 1,1:d2last - d2first + 1,1:d3last - d3first + 1]
+        RDF[int(d1first):int(d1last),int(d2first):int(d2last),int(d3first):int(d3last)]=p_final[1:int(d1last- d1first + 1),1:int(d2last - d2first + 1),1:int(d3last - d3first + 1)]
 # PDF.m:113
         shim=np.zeros(matrix_size0)
 # PDF.m:116
-        shim[d1first:d1last,d2first:d2last,d3first:d3last]=xx[1:d1last - d1first + 1,1:d2last - d2first + 1,1:d3last - d3first + 1]
+        shim[int(d1first):int(d1last),int(d2first):int(d2last),int(d3first):int(d3last)]=xx[1:int(d1last - d1first + 1),1:int(d2last - d2first + 1),1:int(d3last - d3first + 1)]
 # PDF.m:117
     else:
         RDF=np.copy(p_final)
 # PDF.m:120
         shim=np.copy(xx)
 # PDF.m:121
+    return RDF
     

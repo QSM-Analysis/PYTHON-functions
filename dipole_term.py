@@ -1,5 +1,5 @@
 # Generated with SMOP  0.41
-from smop.libsmop import *
+
 import PDF
 import numpy as np
 # dipole_term.m
@@ -29,10 +29,10 @@ def dipole_term(xx,*args,**kwargs):
 # dipole_term.m:18
     x[PDF.Mask_temp == 1]=0
 # dipole_term.m:19
-    Ax=(np.fft.ifftn((PDF.D_temp*np.fft.fftn((PDF.W_temp*(np.fft.ifftn((PDF.D_temp*np.fft.fftn(x)))))))))
+    Ax=np.real(np.fft.ifftn((PDF.D_temp*np.fft.fftn((PDF.W_temp*np.real(np.fft.ifftn((PDF.D_temp*np.fft.fftn(x)))))))))
 # dipole_term.m:21
     y=Ax[PDF.Mask_temp == 0]
-    print('pass')
+
     return y
     
 # dipole_term.m:22
