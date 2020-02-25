@@ -2,7 +2,11 @@
 #from smop.libsmop import *
 # extract_CSF.m
 import numpy as np
+import scipy.io as sio
 from numpy import*
+from SMV import*
+import scipy.ndimage as ndi
+from skimage import measure,color
 
 def isempty(data):
     if (type(data)!=np.ndarray):
@@ -20,12 +24,10 @@ def extract_CSF(R2s=None,Mask=None,voxel_size=None,flag_erode=1,thresh_R2s=5,*ar
         return Mask_ROI_CSF
     
     n_region_cen=3
-    matrix_size=np.shape(Mask)
+    matrix_size=np.array(np.shape(Mask))
     
     X,Y,Z = np.mgrid[0:matrix_size[0],0:matrix_size[1],0:matrix_size[2]]
     X, Y, Z = X * voxel_size[0], Y * voxel_size[1], Z * voxel_size[2]
- #   print(X[Mask>0])
-    print(X.shape)
     X_cen=sum(X[Mask > 0]) / sum(ravel(Mask))
     Y_cen=sum(Y[Mask > 0]) / sum(ravel(Mask))
     Z_cen=sum(Z[Mask > 0]) / sum(ravel(Mask))
@@ -36,37 +38,51 @@ def extract_CSF(R2s=None,Mask=None,voxel_size=None,flag_erode=1,thresh_R2s=5,*ar
     Mask_cen=sqrt(abs(X - X_cen) ** 2 + abs(Y - Y_cen) ** 2 + abs(Z - Z_cen) ** 2) <= radius_cen
 # extract_CSF.m:28
     if flag_erode:
-        Mask=SMV(Mask,matrix_size,voxel_size,10) > 0.999
+        Mask=SMV(Mask,[[matrix_size],voxel_size,10]) > 0.999
 # extract_CSF.m:32
     
     Mask_raw_1=multiply((R2s < thresh_R2s),Mask_cen)
+    print(Mask_raw_1.shape)
 # extract_CSF.m:37
-    CC=bwconncomp(Mask_raw_1,6)
+
+#    CC=bwconncomp(Mask_raw_1,6)      #获得6连通区域      smop
+    CC,num=measure.label(Mask_raw_1,return_num=True,connectivity=2)  #如果是二维图像，则是8连通区域  STILL HAVE PROBLEMS
 # extract_CSF.m:38
-    numPixels=cellfun(numel,CC.PixelIdxList)
+
+#    numPixels=cellfun(numel,CC.PixelIdxList)    #计算联通区域面积      
+    numPixels={}
+    for i in range(1,num+1):
+        numPixels[i+1]=np.size(np.where(CC==i)[1])  
 # extract_CSF.m:39
-    numPixels_sorted,idxs=sort(numPixels,2,'descend',nargout=2)
+
+    numPixels_sorted=sorted(numPixels,reverse = True)        #对各行元素降序排列
+    idxs=np.argsort(numPixels.values,axis=0)                      #使numPixels_sorted[idxs]=numPixels
 # extract_CSF.m:40
-    ROIs_region_cen=zeros(matrix_size)
+   
+    ROIs_region_cen=np.zeros(matrix_size.shape)
+    CC_PixelIdxList=np.arange(CC.size)
 # extract_CSF.m:41
-    for i in arange(1,n_region_cen).reshape(-1):
-        numPixels_sorted(i)
-        idx=idxs(i)
-# extract_CSF.m:44
-        ROIs_region_cen[CC.PixelIdxList[idx]]=i
+    for i in np.arange(1,n_region_cen).reshape(-1):
+        numPixels_sorted[i]
+        idx=idxs[i]
+# extract_CSF.m:44     
+        ROIs_region_cen[CC_PixelIdxList[idx]]=i
 # extract_CSF.m:45
     
     Mask_raw_2=multiply((R2s < thresh_R2s),Mask)
 # extract_CSF.m:48
-    CC=bwconncomp(Mask_raw_2,6)
+    CC,num=measure.label(Mask_raw_2,return_num=True,connectivity=2)
 # extract_CSF.m:49
-    numPixels=cellfun(numel,CC.PixelIdxList)
+    numPixels={}
+    for i in range(1,num+1):
+        numPixels[i+1]=np.size(np.where(CC==i)[1])
 # extract_CSF.m:50
-    numPixels_sorted,idxs=sort(numPixels,2,'descend',nargout=2)
+    numPixels_sorted=sorted(numPixels,reverse = True)
+    idxs=np.argsort(numPixels.values,axis=0) 
 # extract_CSF.m:51
-    ROIs_region=zeros(matrix_size)
+    ROIs_region=np.zeros(matrix_size.shape)
 # extract_CSF.m:52
-    for i in arange(1,length(idxs)).reshape(-1):
+    for i in arange(1,np.length(idxs)).reshape(-1):
         numPixels_sorted(i)
         idx=idxs(i)
 # extract_CSF.m:55
@@ -86,10 +102,25 @@ def extract_CSF(R2s=None,Mask=None,voxel_size=None,flag_erode=1,thresh_R2s=5,*ar
     
 if __name__ == '__main__':
     pass
-R2s=4
-Mask= np.ones([256,256,64])
-flag_erode=5
-thresh_R2s=7
-voxel_size=[0.9375,0.9375,2.0];
-Mask_ROI_CSF = extract_CSF(R2s, Mask, voxel_size, flag_erode, thresh_R2s)
-print(Mask_ROI_CSF)
+
+
+Mask=sio.loadmat('x00000001.mat')['Mask']
+voxel_size=sio.loadmat('voxel_size.mat')['voxel_size']
+R2s=sio.loadmat('R2s.mat')['R2s']
+Mask_ROI_CSF = extract_CSF(R2s, Mask, voxel_size)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
