@@ -46,7 +46,7 @@ def extract_CSF(R2s=None,Mask=None,voxel_size=None,flag_erode=1,thresh_R2s=5,*ar
 # extract_CSF.m:37
 
 #    CC=bwconncomp(Mask_raw_1,6)      #获得6连通区域      smop
-    CC,num=measure.label(Mask_raw_1,return_num=True,connectivity=2)  #如果是二维图像，则是8连通区域  STILL HAVE PROBLEMS
+    CC,num=measure.label(Mask_raw_1,return_num=True,neighbors=4)  
 # extract_CSF.m:38
 
 #    numPixels=cellfun(numel,CC.PixelIdxList)    #计算联通区域面积      
