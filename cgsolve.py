@@ -6,6 +6,9 @@ def cgsolve(A,b,tol,maxiter,verbose=None,x0=None):
     
     
     matrix_size = b.shape
+
+
+    print(matrix_size)
     b = b.flatten(1)
     implicit = isinstance(A,type(cgsolve))
     x = np.zeros(((len(b))))

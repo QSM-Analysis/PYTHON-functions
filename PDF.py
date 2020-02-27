@@ -1,9 +1,11 @@
 # Generated with SMOP  0.41
 import pandas as pd
 import numpy as np
+from sklearn.externals import joblib
 from dipole_kernel import*
 from cgsolve import*
 from dipole_term import*
+
 # PDF.m
 
     # Projection onto Dipole Fields (PDF)
@@ -90,16 +92,18 @@ def PDF(iFreq=None,N_std=None,Mask=None,matrix_size=None,voxel_size=None,B0_dir=
 # PDF.m:75
     W=W*(Mask > 0)
     print('W',W.shape)
+    print(W[100:102,100:102,50:52])
 # PDF.m:76
     W_std=np.copy(W)
 # PDF.m:77
     W_var=W ** 2
     print('W_var',W_var.shape)
+    print(W_var[100:102,100:102,50:52])
 # PDF.m:78
     ###### start the PDF method #####
     #if norm(ravel(B0_dir),1) < 1.01:
     
-    print('matrix_size=',matrix_size,'voxel_size=',voxel_size,'B0_dir=',B0_dir)
+
     if np.linalg.norm(B0_dir.flatten(1),1)<1.01:
         
         D=dipole_kernel([matrix_size,voxel_size,B0_dir])
@@ -108,9 +112,11 @@ def PDF(iFreq=None,N_std=None,Mask=None,matrix_size=None,voxel_size=None,B0_dir=
         D=dipole_kernel([matrix_size,voxel_size,B0_dir,space])
 # PDF.m:84
     print('D',D.shape)
+    print(D[100:102,100:102,50:52])
     # generating the RHS vector in Eq. 6 in the PDF paper
     p_temp=np.real(np.fft.ifftn(D*np.fft.fftn(W_var*(iFreq))))
     print('p_temp',p_temp.shape)
+    print(p_temp[100:102,100:102,50:52])
 # PDF.m:88
     b=p_temp[Mask == 0]
     print('b',b.shape)
@@ -125,12 +131,10 @@ def PDF(iFreq=None,N_std=None,Mask=None,matrix_size=None,voxel_size=None,B0_dir=
     
 
     A=dipole_term
-    global W_temp
-    global D_temp
-    global Mask_temp
-    W_temp=np.copy(W)
-    D_temp=np.copy(D)
-    Mask_temp=np.copy(Mask)
+    joblib.dump(W,'W.pkl')
+    joblib.dump(D,'D.pkl')
+    joblib.dump(Mask,'Mask.pkl')
+
 # PDF.m:94
     cg_tol=np.dot(tol,np.linalg.norm(E_noise_level[Mask == 0]/ np.linalg.norm(b.flatten(1))))
 # PDF.m:95

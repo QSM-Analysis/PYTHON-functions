@@ -1,6 +1,6 @@
 # Generated with SMOP  0.41
 
-import PDF
+from sklearn.externals import joblib
 import numpy as np
 # dipole_term.m
 
@@ -20,18 +20,20 @@ import numpy as np
     
 
 def dipole_term(xx,*args,**kwargs):
-    
-    
-    x=np.zeros((PDF.D_temp.shape))
+    W=joblib.load('W.pkl')
+    D=joblib.load('D.pkl')
+    Mask=joblib.load('Mask.pkl')
+
+    x=np.zeros((D.shape))
 # dipole_term.m:17
     #x[(Mask.flatten(1)) == 0]=0
-    x[PDF.Mask_temp == 0]=xx
+    x[Mask == 0]=xx
 # dipole_term.m:18
-    x[PDF.Mask_temp == 1]=0
+    x[Mask == 1]=0
 # dipole_term.m:19
-    Ax=np.real(np.fft.ifftn((PDF.D_temp*np.fft.fftn((PDF.W_temp*np.real(np.fft.ifftn((PDF.D_temp*np.fft.fftn(x)))))))))
+    Ax=np.real(np.fft.ifftn(D*np.fft.fftn(W*np.real(np.fft.ifftn(D*np.fft.fftn(x))))))
 # dipole_term.m:21
-    y=Ax[PDF.Mask_temp == 0]
+    y=Ax[Mask == 0]
 
     return y
     
