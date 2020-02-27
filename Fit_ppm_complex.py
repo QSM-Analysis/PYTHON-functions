@@ -30,9 +30,10 @@
 import sys    
 import numpy as np
 from numpy import zeros, min, pi, abs,ones, dot, multiply, exp, mod, conj, angle, sqrt,\
-    arange, floor, ceil
+    arange, floor, ceil, sum
 from numpy.matlib import repmat
 # dytpe='single'
+_esp = 0.00000001
 
 class opts0:
     def __init__(self):
@@ -81,144 +82,81 @@ def Fit_ppm_complex(M=None,opts=defopts):
     M=np.conjugate(M)
     s0=M.shape
     L_s0=len(s0)
-    if L_s0<=len(M.shape):
-        nechos=M.shape[L_s0-1]
-    else:
-        nechos=1
-    # M=np.reshape(M,[np.prod(M.shape[:-1]),M.shape[-1]])
-    M=np.reshape(M,[np.prod(s0[:(L_s0-1)]),s0[L_s0-1]])
+    nechos = M.shape[-1]
+    
+    M=M.reshape([np.prod(s0[:(L_s0-1)]),s0[L_s0-1]])
     s=M.shape
+    
     Y=np.angle(M[:,:np.min([3,nechos])])
     c=Y[:,1] - Y[:,0]
-    temp = np.array([abs(c-2*pi),abs(c),abs(c+2*pi)])
-    m = temp.min(1)
-    ind = temp.argmin(1)
-    k=ind
-    for i in range(len(ind)):
-        if ind[i]==0:
-            k[i]=1
-        else:
-            k[i]=0
-            
-    c[k] = c[k] - 2*pi
-    
-    for i in range( len(ind)):
-        if ind[i]==2:
-            k[i]=1
-        else:
-            k[i]=0
-    c[k] = c[k] + 2*pi
+    ind = np.argmin([abs(c-2*pi),abs(c),abs(c+2*pi)],axis=0)
+    c[ind==0]=c[ind==0]-2*np.pi
+    c[ind==2]=c[ind==2]+2*np.pi
     
     for n in range(min([2,nechos-1])):
         cd=((Y[:,n + 1] - Y[:,n])) - c
-        
-        
-        Y[cd < - pi,(n + 1):len(Y[cd<-pi])]=Y[cd < - pi,(n + 1):len(Y[cd<-pi])] + 2*pi
-        Y[cd> pi,(n + 1):len(Y[cd>pi])]=Y[cd> pi,(n + 1):len(Y[cd>pi])] + 2*pi
-       #Y[cd < - pi,arange((n + 1),len(Y[cd<-pi]))]=Y[cd < - pi,arange((n + 1),len(Y[cd<-pi]))] + 2*pi
-       # for i in range((n + 1),len(Y[cd<-pi])):
-           # Y[cd < - pi,i]+=dot(2,pi)
-# Fit_ppm_complex.m:92
-        #for i in range((n + 1),len(Y[cd>pi])): 
-            #Y[cd > pi,i]=Y[cd > pi,i] - dot(2,pi)
-# Fit_ppm_complex.m:93
-  #A=tf.cast(concat([[1,0],[1,1],[1,2]]),M.dtype)
+        Y[cd < - pi,(n + 1):] = Y[cd < - pi,(n + 1):] + 2*pi
+        Y[cd >   pi,(n + 1):] = Y[cd >   pi,(n + 1):] + 2*pi
     A=np.array([[1,0],[1,1],[1,2]])
-# Fit_ppm_complex.m:95
-    #ip = A(1:min(3,nechos),:)\Y(:,1:min(3,nechos))';
     ip=dot(np.mat(A[:min([3,nechos]),:]).I,Y[:,:min([3,nechos])].conj().T)
-
-# Fit_ppm_complex.m:96
-    p0=np.array(ip[0,:]).conj().T
-# Fit_ppm_complex.m:97
-    p1=np.array(ip[1,:]).conj().T
-# Fit_dppm_complex.m:98
+    ip=np.asarray(ip)
+    
+    p0=np.array(ip[0,:].conj().T)
+    p1=np.array(ip[1,:].conj().T)
+    p0, p1 = p0.reshape(p0.size,1), p1.reshape(p1.size,1)
+    
     dp1=p1.copy()
-# Fit_ppm_complex.m:100
-    tol=dot(np.linalg.norm(p1[:]),opts.reltol)
-# Fit_ppm_complex.m:101
-    iter=0
-# Fit_ppm_complex.m:102
-    # max_iter = 30;
+    tol = dot(np.linalg.norm(p1[:]),opts.reltol)
+    miter=0
     
     # weigthed least square
-# calculation of WA'*WA
-    
+    # calculation of WA'*WA
     v1=ones((1,nechos),M.dtype)
-    
-# Fit_ppm_complex.m:107
-    #v2=cast((arange(0,(nechos - 1))),M.dtype)
-    v2=np.array([[i for i in range(nechos)]])
-    
-# Fit_ppm_complex.m:108
-    a11=np.sum((abs(M) ** 2.0) * (ones((s[0],1),M.dtype)*(v1*v1)),axis=1)
-# Fit_ppm_complex.m:114
-    a12=np.sum((abs(M) ** 2.0) * (ones((s[0],1),M.dtype)*(v1*v2)),axis=1)
-    # a12=sum(multiply(abs(M) ** 2.0,(dot(ones((s[0],1),M.dtype),(multiply(v1,v2))))),2)
-# Fit_ppm_complex.m:115
-    a22=np.sum((abs(M) ** 2.0) * (ones((s[0],1),M.dtype)*(v2*v2)),axis=1)
-    #a22=sum(multiply(abs(M) ** 2.0,(dot(ones((s[0],1),M.dtype),(v2 ** 2)))),2)
-# Fit_ppm_complex.m:111
+    v2=np.arange(0,nechos).astype(M.dtype).reshape(1,nechos)
+    a11=np.sum(multiply(abs(M) ** 2.0,dot(ones((s[0],1),M.dtype),v1 ** 2)),1)
+    a12=np.sum(multiply(abs(M) ** 2.0,dot(ones((s[0],1),M.dtype),v1 * v2)),1)
+    a22=np.sum(multiply(abs(M) ** 2.0,dot(ones((s[0],1),M.dtype),v2 ** 2)),1)
     # inversion
-    d=multiply(a11,a22) - a12 ** 2
-# Fit_ppm_complex.m:113
+    d=a11*a22 - a12 ** 2 + _esp
     ai11=a22 / d 
-# Fit_ppm_complex.m:114
     ai12=- a12 / d
-# Fit_ppm_complex.m:115
     ai22=a11 / d
-# Fit_ppm_complex.m:116
-    while ((np.linalg.norm(dp1) > tol) and (iter < opts.max_iter)):
 
-        iter=iter + 1
-# Fit_ppm_complex.m:119
-        W=abs(M)*exp(1j*(dot(p0,v1) + dot(p1,v2)))
+    while ((np.linalg.norm(dp1) > tol) and (miter < opts.max_iter)):
+
+        miter=miter + 1
+        W= abs(M) * exp(1j*np.asarray((dot(p0,v1) + dot(p1,v2))))
         
-# Fit_ppm_complex.m:120
-        #pr1=sum(multiply(multiply(np.conj(dot(1j,W)),(dot(ones((s[0],1),M.dtype),v1))),(M - W)),2)
-        pr1 = np.sum(np.conj(1j*W)*(ones((s[0],1),M.dtype)*v1)*(M-W),axis=1)
-# Fit_ppm_complex.m:123
-        #pr2=sum(multiply(multiply(np.conj(dot(1j,W)),(dot(ones((s[0],1),M.dtype),v2))),(M - W)),2)
-        pr2 = np.sum(np.conj(1j*W)*(ones((s[0],1),M.dtype)*v2)*(M-W),axis=1)
-# Fit_ppm_complex.m:124
+        # projection
+        pr1 = np.sum(np.conj(1j*W) * multiply(dot(ones((s[0],1),M.dtype),v1),(M-W)),axis=1)
+        pr2 = np.sum(np.conj(1j*W) * multiply(dot(ones((s[0],1),M.dtype),v2),(M-W)),axis=1)
+        
         dp0=np.real(ai11*pr1 + ai12*pr2).reshape([ai11.size,1])
-# Fit_ppm_complex.m:126
         dp1=np.real(ai12*pr1 + ai22*pr2).reshape([ai11.size,1])
-# Fit_ppm_complex.m:127
         dp1[np.isnan(dp1)]=0
-# Fit_ppm_complex.m:128
         dp0[np.isnan(dp0)]=0 
-# Fit_ppm_complex.m:129
+        
+        # update 
         p1=p1 + dp1
-# Fit_ppm_complex.m:132
         p0=p0 + dp0
-# Fit_ppm_complex.m:133
 
     
-    # error propagation
     dp1=sqrt(ai22)
-# Fit_ppm_complex.m:139
     dp1[np.isnan(dp1)]=0
-# Fit_ppm_complex.m:140
     dp1[np.isinf(dp1)]=0
-# Fit_ppm_complex.m:141
     # relative residual
-    res=M - abs(M)*exp(1j*(dot(p0,v1) + dot(p1,v2)))
-# Fit_ppm_complex.m:144
+    res=M - multiply(abs(M),exp(1j*np.array(dot(p0,v1) + dot(p1,v2))))
     relres=np.sum(abs(res) ** 2,axis=1) / np.sum(abs(M) ** 2,axis=1)
-# Fit_ppm_complex.m:145
     relres[np.isnan(relres)]=0
-# Fit_ppm_complex.m:146
-    p1[p1 > pi]=mod(p1[p1 > pi] + pi,dot(2,pi)) - pi
-# Fit_ppm_complex.m:148
-    p1[p1 < - pi]=mod(p1[p1 < - pi] + pi,dot(2,pi)) - pi
-# Fit_ppm_complex.m:149
+    
+    # careful, mod two param should be the same data type
+    # error when p1 is complex and pi is float
+    p1[p1 > pi]=mod(p1[p1 > pi] + pi,2*pi) - pi
+    p1[p1 < - pi]=mod(p1[p1 < - pi] + pi,2*pi) - pi
+    
     p0=np.reshape(p0,s0[:(L_s0-1)])
-# Fit_ppm_complex.m:151
     p1=np.reshape(p1,s0[:(L_s0-1)])
-# Fit_ppm_complex.m:152
     dp1=np.reshape(dp1,s0[:(L_s0-1)])
-# Fit_ppm_complex.m:153
     relres=np.reshape(relres,s0[:(L_s0-1)])
+    
     return p1,dp1,relres,p0
-# Fit_ppm_complex.m:154
