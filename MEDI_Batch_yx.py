@@ -27,6 +27,7 @@ from unwrapLaplacian import unwrapLaplacian
 import os
 import nibabel as nib
 from arlo import arlo
+from PyQSM.extract_CSF import extract_CSF
 # MEDI_Batch_yx.m
 
 fig=plt.figure()
@@ -34,11 +35,14 @@ fig=plt.figure()
 data=scio.loadmat('medi_siemens_data.mat')
 iField=data['iField'].astype(np.complex64)
 
+matrix_size = iField.shape[:3]
+voxel_size = [0.9375,0.9375,2.0]
+    
 #iMag=np.sqrt(np.sum(abs(iField) ** 2,3))
 
 
 ######################################################################
-run_Fit_ppm_complex=True
+run_Fit_ppm_complex=False
 if run_Fit_ppm_complex:
     iFreq_raw,N_std,a,b=Fit_ppm_complex(iField)
     np.savez(r'QSM_temp_data', fit_ppm_complex=(iFreq_raw, N_std,a,b))
@@ -49,10 +53,9 @@ fig1=fig.add_subplot(231)
 fig1.imshow(abs(iFreq_raw[:,:,30]),'gray',vmin=0,vmax=1)
 
 ######################################################################
-run_unwrapLaplacian = True
+run_unwrapLaplacian = False
 if run_unwrapLaplacian:
-    matrix_size = iField.shape[:3]
-    voxel_size = [0.9375,0.9375,2.0]
+    
     
     iFreq = unwrapLaplacian(iFreq_raw,matrix_size,voxel_size)
     np.savez(r'QSM_temp_data2', unwraplaplacian=(iFreq))
@@ -90,7 +93,9 @@ R2s=arlo(TE,abs(iField))
 fig4=fig.add_subplot(234)
 fig4.imshow(R2s[:,:,30]*Mask[:,:,30],'gray',vmin=0,vmax=40)
 
-# Mask_CSF=extract_CSF(R2s,Mask,voxel_size)
+Mask_CSF=extract_CSF(R2s,Mask,voxel_size)
+fig5=fig.add_subplot(235)
+fig5.imshow(Mask_CSF[:,:,30],'gray',vmin=0,vmax=1)
 
 # RDF=PDF(iFreq,N_std,Mask,matrix_size,voxel_size,B0_dir)
 
