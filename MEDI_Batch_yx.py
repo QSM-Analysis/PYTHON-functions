@@ -1,24 +1,4 @@
-# Generated with SMOP  0.41
 import sys
-# from smop.libsmop import *
-# from BET import*
-# from arlo import*
-# from extract_CSF import*
-# from PDF import*
-# from sphere_kernel import*
-# from dipole_term import*
-# from cgsolve import*
-# from store_QSM_results import*
-# from cgsolve import*
-# from gradient_mask import*
-# from cgrad import*
-# from cdiv import*
-# from bdiv import*
-# from fgrad import*
-# from dataterm_mask import*
-# from SMV import*
-# from sphere_kernel import*
-# from SMV_kernel import*
 import scipy.io as scio
 import matplotlib.pyplot as plt
 import numpy as np
@@ -28,7 +8,7 @@ import os
 import nibabel as nib
 from arlo import arlo
 from PyQSM.extract_CSF import extract_CSF
-# MEDI_Batch_yx.m
+from PyQSM.PDF import PDF
 
 fig=plt.figure()
 
@@ -39,7 +19,6 @@ matrix_size = iField.shape[:3]
 voxel_size = [0.9375,0.9375,2.0]
     
 #iMag=np.sqrt(np.sum(abs(iField) ** 2,3))
-
 
 ######################################################################
 run_Fit_ppm_complex=False
@@ -83,8 +62,15 @@ fig2.imshow(np.abs(iFreq[:,:,30]),'gray',vmin=0,vmax=1)
 maskpath = r'004_QSM_MONO_8TE_IPAT2_68phpf_NoFC_mask.nii.gz'
 fimg  = nib.load(maskpath)
 Mask = np.asarray(fimg.dataobj)[:,::-1,:]
+# fig3=fig.add_subplot(233)
+# fig3.imshow(Mask[:,:,30],'gray',vmin=0,vmax=1)
+
+######################################################################
+# Back ground field removal
+B0_dir = np.array([0,0,1])
+RDF=PDF(iFreq,N_std,Mask,matrix_size,voxel_size,B0_dir)
 fig3=fig.add_subplot(233)
-fig3.imshow(Mask[:,:,30],'gray',vmin=0,vmax=1)
+fig3.imshow(RDF[:,:,30],'gray',vmin=-1,vmax=1)
 
 ######################################################################
 # R2s cal

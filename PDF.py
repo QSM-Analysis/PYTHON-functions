@@ -1,10 +1,13 @@
 # Generated with SMOP  0.41
-import pandas as pd
+# import pandas as pd
 import numpy as np
-from sklearn.externals import joblib
-from dipole_kernel import*
-from cgsolve import*
-from dipole_term import*
+from dipole_kernel import dipole_kernel
+from dipole_term import dipole_term
+from cgsolve import cgsolve
+# from sklearn.externals import joblib
+# from dipole_kernel import*
+# from cgsolve import*
+# from dipole_term import*
 
 # PDF.m
 
