@@ -55,7 +55,7 @@ def cgsolve(A,b,tol,maxiter,verbose=None,x0=None):
             else:
                 r = b - np.dot(A,x)
         else:
-            r = r - np.dot(alpha,b)
+            r = r - alpha*q
 
         deltaold = delta
         delta = np.dot((r.conj().T),r)
