@@ -134,7 +134,7 @@ def PDF(iFreq=None,N_std=None,Mask=None,matrix_size=None,voxel_size=None,B0_dir=
     
 
     A=dipole_term
-    joblib.dump(W,'W.pkl')
+    joblib.dump(W_var,'W_var.pkl')
     joblib.dump(D,'D.pkl')
     joblib.dump(Mask,'Mask.pkl')
 

@@ -16,10 +16,9 @@ N_std=scio.loadmat('matlabdata_N_std_FOR RDF.mat')['N_std']
 
 RDF=PDF(iFreq,N_std,Mask,matrix_size,voxel_size,B0_dir)
 print('RDF.shape=',RDF.shape)
-RDF=RDF/10000
-
+print('RDF=',RDF[126:129,126:129,29])
 fig=plt.figure()
 fig1=fig.add_subplot(111)
-fig1.imshow(np.real(RDF[:,:,30]),'gray')
+fig1.imshow(np.real(RDF[:,:,29]),'gray')
 plt.show()
 print('pass')

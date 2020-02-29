@@ -20,7 +20,7 @@ import numpy as np
     
 
 def dipole_term(xx,*args,**kwargs):
-    W=joblib.load('W.pkl')
+    W=joblib.load('W_var.pkl')
     D=joblib.load('D.pkl')
     Mask=joblib.load('Mask.pkl')
 
