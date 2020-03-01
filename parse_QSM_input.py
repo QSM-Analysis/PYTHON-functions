@@ -88,7 +88,8 @@ def parse_QSM_input(varargin=None,*args,**kwargs):
     # CSF regularization
 #    if ismember('Mask_CSF',who('-file',filename)):
 #        Mask_CSF=logical(getfield(load(filename,'Mask_CSF'),'Mask_CSF'))
-    if np.in1d('Mask_CSF',data):
+#    if np.in1d('Mask_CSF',data):
+    if data['Mask_CSF'].size != 0
         Mask_CSF=data['Mask_CSF'].astype(bool)
 # .\parse_QSM_input.m:62
     else:
