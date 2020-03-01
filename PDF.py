@@ -1,8 +1,8 @@
 # Generated with SMOP  0.41
 # import pandas as pd
 import numpy as np
-from dipole_kernel import dipole_kernel
-from dipole_term import dipole_term
+from PyQSM.dipole_kernel import dipole_kernel
+from PyQSM.dipole_term import dipole_term
 from PyQSM.cgsolve import cgsolve
 # from sklearn.externals import joblib
 # from dipole_kernel import*

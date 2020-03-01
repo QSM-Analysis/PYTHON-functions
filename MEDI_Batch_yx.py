@@ -6,7 +6,7 @@ from PyQSM.Fit_ppm_complex import Fit_ppm_complex
 from PyQSM.unwrapLaplacian import unwrapLaplacian
 import os
 import nibabel as nib
-from arlo import arlo
+from PyQSM.arlo import arlo
 from PyQSM.extract_CSF import extract_CSF
 from PyQSM.PDF import PDF
 
@@ -18,6 +18,7 @@ iField=data['iField'].astype(np.complex64)
 matrix_size = np.array(iField.shape[:3])
 voxel_size = np.array([0.9375,0.9375,2.0])
 B0_dir = np.array([0,0,1])
+TE=np.array([0.0036,0.0095,0.0154,0.0213,0.0273,0.0332,0.0391,0.0450])
 #iMag=np.sqrt(np.sum(abs(iField) ** 2,3))
 
 ######################################################################
@@ -32,7 +33,7 @@ fig1=fig.add_subplot(231)
 fig1.imshow(iFreq_raw[:,:,30],'gray',vmin=-1,vmax=1)
 
 ######################################################################
-run_unwrapLaplacian = True
+run_unwrapLaplacian = False
 if run_unwrapLaplacian:
     iFreq = unwrapLaplacian(iFreq_raw,matrix_size,voxel_size)
     np.savez(r'QSM_temp_data2', unwraplaplacian=(iFreq))
@@ -69,7 +70,7 @@ Mask = np.asarray(fimg.dataobj)[:,::-1,:]
 # iFreq=data['iFreq'].astype(np.float32)
 # N_std =data['N_std'].astype(np.float32)
 # Mask  =data['Mask'].astype(int)
-run_RDF = True
+run_RDF = False
 if run_RDF:
     RDF, shim =PDF(iFreq,N_std,Mask,matrix_size,voxel_size,B0_dir)
     np.savez(r'QSM_temp_data3', PDF=(RDF, shim))
@@ -81,7 +82,6 @@ fig3.imshow(RDF[:,:,30],'gray',vmin=-1,vmax=1)
 
 ######################################################################
 # R2s cal
-TE=np.array([0.0036,0.0095,0.0154,0.0213,0.0273,0.0332,0.0391,0.0450])
 R2s=arlo(TE,abs(iField))
 fig4=fig.add_subplot(234)
 fig4.imshow(R2s[:,:,30]*Mask[:,:,30],'gray',vmin=0,vmax=40)
