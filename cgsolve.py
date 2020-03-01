@@ -4,21 +4,21 @@ import numpy as np
 
 def cgsolve(A,b,tol,maxiter,verbose=None,x0=None):
     
-    
     matrix_size = b.shape
-
-
     print(matrix_size)
     b = b.flatten(1)
-    implicit = isinstance(A,type(cgsolve))
-    x = np.zeros(((len(b))))
+    
+    implicit = (type(A[0])==type(cgsolve))
+    if implicit:
+        fun, W,D,Mask = A
+        
     if x0 == None:
         x = np.zeros((len(b),1))
         r = b  
     else:
-        x = x0.reshape(1,-1)
+        x = x0.flatten()
         if implicit:
-            r = b-A(np.reshape(x,matrix_size))
+            r = b-fun(W, D, Mask, np.reshape(x,matrix_size))
             r = r.reshape(1,-1)
         else:
             r = b
@@ -26,32 +26,29 @@ def cgsolve(A,b,tol,maxiter,verbose=None,x0=None):
     if verbose==None:
         verbose = 1
     
-    
     d = r
     delta = np.dot(r.conj().T,r)
-    
     delta0 = np.dot((b.conj().T),b)
     numiter = 0
     bestx= x
     bestres = np.sqrt(delta/delta0)
     
-    while np.logical_and((numiter < maxiter), (delta> tol**2*delta0)):
+    while (numiter < maxiter) and (delta> tol**2 * delta0):
+        
         #q = A*d
         if implicit:
-            q = A(np.reshape(d,matrix_size))
-            q = q.flatten(1)
+            q = fun(W, D, Mask,np.reshape(d,matrix_size))
+            #q = q.flatten()
             
         else:
             q = A*d
         alpha = delta/np.dot((d.conj().T),q)
-
-        temp=d*alpha
-        temp=temp[:,np.newaxis]
-        x = x+temp
+        x = x+d.reshape([d.size,1])*alpha
+        
         if (numiter+1) % 50 == 0:
             # r = b - Aux*x
             if implicit:
-                r = b - np.reshape(A(np.reshape(x,matrix_size)),len(b))
+                r = b - np.reshape(fun(W, D, Mask,np.reshape(x,matrix_size)),len(b))
             else:
                 r = b - np.dot(A,x)
         else:

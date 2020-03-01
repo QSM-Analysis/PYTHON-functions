@@ -2,8 +2,8 @@ import sys
 import scipy.io as scio
 import matplotlib.pyplot as plt
 import numpy as np
-from Fit_ppm_complex import Fit_ppm_complex
-from unwrapLaplacian import unwrapLaplacian
+from PyQSM.Fit_ppm_complex import Fit_ppm_complex
+from PyQSM.unwrapLaplacian import unwrapLaplacian
 import os
 import nibabel as nib
 from arlo import arlo
@@ -15,9 +15,9 @@ fig=plt.figure()
 data=scio.loadmat('medi_siemens_data.mat')
 iField=data['iField'].astype(np.complex64)
 
-matrix_size = iField.shape[:3]
-voxel_size = [0.9375,0.9375,2.0]
-    
+matrix_size = np.array(iField.shape[:3])
+voxel_size = np.array([0.9375,0.9375,2.0])
+B0_dir = np.array([0,0,1])
 #iMag=np.sqrt(np.sum(abs(iField) ** 2,3))
 
 ######################################################################
@@ -29,13 +29,11 @@ else:
     arch = np.load(r'QSM_temp_data.npz')
     iFreq_raw,N_std,a,b = arch['fit_ppm_complex']
 fig1=fig.add_subplot(231)
-fig1.imshow(abs(iFreq_raw[:,:,30]),'gray',vmin=0,vmax=1)
+fig1.imshow(iFreq_raw[:,:,30],'gray',vmin=-1,vmax=1)
 
 ######################################################################
-run_unwrapLaplacian = False
+run_unwrapLaplacian = True
 if run_unwrapLaplacian:
-    
-    
     iFreq = unwrapLaplacian(iFreq_raw,matrix_size,voxel_size)
     np.savez(r'QSM_temp_data2', unwraplaplacian=(iFreq))
     print(iFreq[128:132,128:132,30])
@@ -45,7 +43,7 @@ else:
     arch = np.load(r'QSM_temp_data2.npz')
     iFreq = arch['unwraplaplacian']
 fig2=fig.add_subplot(232)
-fig2.imshow(np.abs(iFreq[:,:,30]),'gray',vmin=0,vmax=1)
+fig2.imshow(iFreq[:,:,30],'gray',vmin=-1,vmax=1)
 
 ######################################################################
 ## bet 
@@ -67,8 +65,17 @@ Mask = np.asarray(fimg.dataobj)[:,::-1,:]
 
 ######################################################################
 # Back ground field removal
-B0_dir = np.array([0,0,1])
-RDF=PDF(iFreq,N_std,Mask,matrix_size,voxel_size,B0_dir)
+# data=scio.loadmat('matlab_4RDF.mat')
+# iFreq=data['iFreq'].astype(np.float32)
+# N_std =data['N_std'].astype(np.float32)
+# Mask  =data['Mask'].astype(int)
+run_RDF = True
+if run_RDF:
+    RDF, shim =PDF(iFreq,N_std,Mask,matrix_size,voxel_size,B0_dir)
+    np.savez(r'QSM_temp_data3', PDF=(RDF, shim))
+else:
+    arch = np.load(r'QSM_temp_data3.npz')
+    RDF, shim = arch['PDF']
 fig3=fig.add_subplot(233)
 fig3.imshow(RDF[:,:,30],'gray',vmin=-1,vmax=1)
 

@@ -111,13 +111,17 @@ def Fit_ppm_complex(M=None,opts=defopts):
     
     # weigthed least square
     # calculation of WA'*WA
-    v1=ones((1,nechos),M.dtype)
-    v2=np.arange(0,nechos).astype(M.dtype).reshape(1,nechos)
-    a11=np.sum(multiply(abs(M) ** 2.0,dot(ones((s[0],1),M.dtype),v1 ** 2)),1)
-    a12=np.sum(multiply(abs(M) ** 2.0,dot(ones((s[0],1),M.dtype),v1 * v2)),1)
-    a22=np.sum(multiply(abs(M) ** 2.0,dot(ones((s[0],1),M.dtype),v2 ** 2)),1)
+    v1=ones((1,nechos))#,M.dtype)
+    v2=np.arange(0,nechos).reshape(1,nechos)#.astype(M.dtype)
+    a11=np.sum(multiply(abs(M) ** 2.0,dot(ones((s[0],1)),v1 ** 2)),1)
+    a12=np.sum(multiply(abs(M) ** 2.0,dot(ones((s[0],1)),v1 * v2)),1)
+    a22=np.sum(multiply(abs(M) ** 2.0,dot(ones((s[0],1)),v2 ** 2)),1)
+#     a11=np.sum(multiply(abs(M) ** 2.0,dot(ones((s[0],1),M.dtype),v1 ** 2)),1)
+#     a12=np.sum(multiply(abs(M) ** 2.0,dot(ones((s[0],1),M.dtype),v1 * v2)),1)
+#     a22=np.sum(multiply(abs(M) ** 2.0,dot(ones((s[0],1),M.dtype),v2 ** 2)),1)
     # inversion
-    d=a11*a22 - a12 ** 2 + _esp
+    d=a11*a22 - a12 ** 2
+    d[d==0] = np.nan
     ai11=a22 / d 
     ai12=- a12 / d
     ai22=a11 / d
@@ -128,8 +132,8 @@ def Fit_ppm_complex(M=None,opts=defopts):
         W= abs(M) * exp(1j*np.asarray((dot(p0,v1) + dot(p1,v2))))
         
         # projection
-        pr1 = np.sum(np.conj(1j*W) * multiply(dot(ones((s[0],1),M.dtype),v1),(M-W)),axis=1)
-        pr2 = np.sum(np.conj(1j*W) * multiply(dot(ones((s[0],1),M.dtype),v2),(M-W)),axis=1)
+        pr1 = np.sum(np.conj(1j*W) * multiply(dot(ones((s[0],1)),v1),(M-W)),axis=1)
+        pr2 = np.sum(np.conj(1j*W) * multiply(dot(ones((s[0],1)),v2),(M-W)),axis=1)
         
         dp0=np.real(ai11*pr1 + ai12*pr2).reshape([ai11.size,1])
         dp1=np.real(ai12*pr1 + ai22*pr2).reshape([ai11.size,1])
