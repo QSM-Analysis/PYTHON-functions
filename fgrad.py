@@ -15,11 +15,11 @@ import numpy as np
 # [2] Pock et al., Global Solutions of Variational Models with Convex
 # Regularization, SIIMS 2010
     
-def fgrad(chi=None,voxel_size=np.array([1,1,1])):
+def fgrad(chi=None,voxel_size=np.array([[1],[1],[1]])):
 # .\fgrad.m:16
     
     # chi = double(chi);
-    
+    voxel_size=np.array(voxel_size.T[0])
     Dx=np.concatenate((chi[1:,:,:],chi[-1:,:,:])) - chi
 # .\fgrad.m:21
     Dy=np.concatenate((chi[:,1:,:],chi[:,-1:,:]),axis=1) - chi
@@ -38,4 +38,5 @@ def fgrad(chi=None,voxel_size=np.array([1,1,1])):
     
 if __name__ == '__main__':
     pass
-    
+# chi=np.zeros((256,256,64))
+# fgrad(chi)
