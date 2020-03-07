@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import sys
 import scipy.io as scio
 import matplotlib.pyplot as plt
@@ -9,7 +10,9 @@ import nibabel as nib
 from PyQSM.arlo import arlo
 from PyQSM.extract_CSF import extract_CSF
 from PyQSM.PDF import PDF
+from PyQSM.MEDI_L1 import MEDI_L1
 
+#QSM,cost_reg_history,cost_data_history=MEDI_L1(np.array(['lambda',1000,'percentage',0.9,'smv',5]))
 fig=plt.figure()
 
 data=scio.loadmat('medi_siemens_data.mat')
@@ -19,7 +22,9 @@ matrix_size = np.array(iField.shape[:3])
 voxel_size = np.array([0.9375,0.9375,2.0])
 B0_dir = np.array([0,0,1])
 TE=np.array([0.0036,0.0095,0.0154,0.0213,0.0273,0.0332,0.0391,0.0450])
-#iMag=np.sqrt(np.sum(abs(iField) ** 2,3))
+delta_TE = np.diff(TE).mean()
+CF = 123225803
+
 
 ######################################################################
 run_Fit_ppm_complex=False
@@ -90,8 +95,18 @@ Mask_CSF=extract_CSF(R2s,Mask,voxel_size)
 fig5=fig.add_subplot(235)
 fig5.imshow(Mask_CSF[:,:,30],'gray',vmin=0,vmax=1)
 
-# RDF=PDF(iFreq,N_std,Mask,matrix_size,voxel_size,B0_dir)
-
+######################################################################
+# cal MEDI_L1
+run_QSM = True
+if run_QSM:
+    iMag=np.sqrt(np.sum(abs(iField) ** 2,3))
+    QSM,cost_reg_history,cost_data_history=MEDI_L1(RDF,N_std,iMag,Mask,Mask_CSF>0, voxel_size,B0_dir,CF, delta_TE, _lambda=1000, edge_percentage=0.9,smv_radius=5)#,max_iter=1,cg_max_iter=1)
+    np.savez(r'QSM_temp_data4', QSM=(QSM,cost_reg_history,cost_data_history))
+else:
+    arch = np.load(r'QSM_temp_data4.npz')
+    QSM,cost_reg_history,cost_data_history = arch['QSM']
+fig6=fig.add_subplot(236)
+fig6.imshow(QSM[:,:,30],'gray',vmin=-0.1,vmax=0.1)
 # figure
 # imshow(RDF(arange(),arange(),30),concat([- 1,1]))
 # QSM=MEDI_L1('lambda',1000,'percentage',0.9,'smv',5)

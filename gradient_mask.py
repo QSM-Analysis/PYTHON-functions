@@ -1,10 +1,7 @@
-# Generated with SMOP  0.41
-from smop.libsmop import *
 import numpy as np
 from numpy import max,abs,dot,multiply,sum
-# .\gradient_mask.m
 
-    # Generate the gradient weighting in MEDI
+# Generate the gradient weighting in MEDI
 #   w=gradient_mask(gradient_weighting_mode, iMag, Mask, grad, voxel_size, percentage)
 # 
 #   output
@@ -24,35 +21,23 @@ from numpy import max,abs,dot,multiply,sum
 #   Modified by Tian Liu on 2011.03.31
 #   Last modified by Tian Liu on 2013.07.24
     
-def gradient_mask(gradient_weighting_mode=None,iMag=None,Mask=None,grad=None,voxel_size=None,percentage=0.9,*args,**kwargs):
-
-# .\gradient_mask.m:24
+def gradient_mask(iMag=None,Mask=None,grad=None,voxel_size=None,percentage=0.9):
+    # modified from matlab code, gradient_weighting_mode is useless, while the percentage is not transfer from GUI
     
-    field_noise_level=dot(0.01,max(iMag[:]))
-# .\gradient_mask.m:29
-    wG=abs(grad(multiply(iMag,(Mask > 0)),voxel_size))
-# .\gradient_mask.m:30
-    denominator=sum(Mask[:] == 1)
-# .\gradient_mask.m:31
-    numerator=sum(wG[:] > field_noise_level)
-# .\gradient_mask.m:32
+    field_noise_level = 0.01 * iMag[:].max()
+    wG = abs(grad(iMag * (Mask > 0),voxel_size))
+    denominator = sum(Mask[:] == 1)
+    numerator = sum(wG[:] > field_noise_level)
     if (numerator / denominator) > percentage:
         while (numerator / denominator) > percentage:
-
-            field_noise_level=dot(field_noise_level,1.05)
-# .\gradient_mask.m:35
-            numerator=sum(wG[:] > field_noise_level)
-# .\gradient_mask.m:36
+            field_noise_level = field_noise_level * 1.05
+            numerator = sum(wG[:] > field_noise_level)
 
     else:
         while (numerator / denominator) < percentage:
-
-            field_noise_level=dot(field_noise_level,0.95)
-# .\gradient_mask.m:40
+            field_noise_level = field_noise_level * 0.95
             numerator=sum(wG[:] > field_noise_level)
-# .\gradient_mask.m:41
-
     
-    wG=(wG <= field_noise_level)
-# .\gradient_mask.m:45
+    wG = (wG <= field_noise_level)
+
     return wG

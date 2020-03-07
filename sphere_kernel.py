@@ -1,7 +1,7 @@
 # Generated with SMOP  0.41
-from smop.libsmop import *
+# from smop.libsmop import *
 import numpy as np
-from numpy import dot,sum
+from numpy import dot,sum, abs
 # .\sphere_kernel.m
 
     # Generate a Spherical kernel with the sum normalized to one
@@ -22,10 +22,10 @@ from numpy import dot,sum
   
 def sphere_kernel(matrix_size=None,voxel_size=None,radius=None,*args,**kwargs):
     radius=float(radius)
-    matrix_size=np.array(matrix_size[0])
+    #matrix_size=np.array(matrix_size[0])
 # .\dipole_kernel.m:76
     #voxel_size=varargin[1]
-    voxel_size=np.array(voxel_size.T[0])
+    #voxel_size=np.array(voxel_size.T[0])
     (Y,X,Z)=np.meshgrid(np.arange(-matrix_size[1]/2,matrix_size[1]/2), np.arange(-matrix_size[0]/2,matrix_size[0]/2), np.arange(-matrix_size[2]/2,matrix_size[2]/2))
 # .\sphere_kernel.m:19
     X=dot(X,voxel_size[0])

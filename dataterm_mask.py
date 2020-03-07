@@ -1,10 +1,7 @@
-# Generated with SMOP  0.41
-from smop.libsmop import *
+# from smop.libsmop import *
 import numpy as np
-from numpy import multiply,mean
-# .\dataterm_mask.m
 
-    # Generate the data weighting
+# Generate the data weighting
 #   w=dataterm_mask(dataterm_weighting_mode, N_std, Mask,cutoff)
 # 
 #   output
@@ -20,20 +17,13 @@ from numpy import multiply,mean
 
 def dataterm_mask(dataterm_weighting_mode=None,N_std=None,Mask=None,*args,**kwargs):
 
-    if 0 == dataterm_weighting_mode:
+    if dataterm_weighting_mode == 0:
         w=1
-# .\dataterm_mask.m:21
-    else:
-        if 1 == dataterm_weighting_mode:
-            w=Mask / N_std
-# .\dataterm_mask.m:23
-            w[np.isnan(w)]=0
-# .\dataterm_mask.m:24
-            w[np.isinf(w)]=0
-# .\dataterm_mask.m:25
-            w=multiply(w,(Mask > 0))
-# .\dataterm_mask.m:26
-            w=w / mean(w[Mask > 0])
-# .\dataterm_mask.m:27
+    elif dataterm_weighting_mode == 1:
+        w = Mask / N_std
+        w[np.isnan(w)] = 0
+        w[np.isinf(w)] = 0
+        w = w * (Mask > 0)
+        w = w / w[Mask > 0].mean() # normalize w by its mean
     return w
     

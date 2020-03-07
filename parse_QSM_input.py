@@ -35,7 +35,7 @@ def parse_QSM_input(varargin=None,*args,**kwargs):
     lam_CSF=100
 # .\parse_QSM_input.m:21
 #    filename='RDF.mat'
-    filename='medi_siemens_data.mat'
+    filename='medi_siemens_data2.mat'
 # .\parse_QSM_input.m:22
     if varargin.shape[0] > 0:
         for k in range(varargin.shape[0]):
@@ -89,7 +89,7 @@ def parse_QSM_input(varargin=None,*args,**kwargs):
 #    if ismember('Mask_CSF',who('-file',filename)):
 #        Mask_CSF=logical(getfield(load(filename,'Mask_CSF'),'Mask_CSF'))
 #    if np.in1d('Mask_CSF',data):
-    if data['Mask_CSF'].size != 0
+    if data['Mask_CSF'].size != 0:
         Mask_CSF=data['Mask_CSF'].astype(bool)
 # .\parse_QSM_input.m:62
     else:

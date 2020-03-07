@@ -6,11 +6,12 @@ def cgsolve(A,b,tol,maxiter,verbose=None,x0=None):
     
     matrix_size = b.shape
     print(matrix_size)
-    b = b.flatten(1)
+    b = b.flatten()
     
-    implicit = (type(A[0])==type(cgsolve))
-    if implicit:
-        fun, W,D,Mask = A
+#     implicit = (type(A[0])==type(cgsolve))
+#     if implicit:
+#         fun, W,D,Mask = A
+    implicit = (type(A)==type(cgsolve))
         
     if x0 == None:
         x = np.zeros((len(b),1))
@@ -18,7 +19,8 @@ def cgsolve(A,b,tol,maxiter,verbose=None,x0=None):
     else:
         x = x0.flatten()
         if implicit:
-            r = b-fun(W, D, Mask, np.reshape(x,matrix_size))
+            #r = b-fun(W, D, Mask, np.reshape(x,matrix_size))
+            r = b-A(np.reshape(x,matrix_size))
             r = r.reshape(1,-1)
         else:
             r = b
@@ -37,7 +39,8 @@ def cgsolve(A,b,tol,maxiter,verbose=None,x0=None):
         
         #q = A*d
         if implicit:
-            q = fun(W, D, Mask,np.reshape(d,matrix_size))
+            #q = fun(W, D, Mask,np.reshape(d,matrix_size))
+            q = A(np.reshape(d,matrix_size)).flatten()
             #q = q.flatten()
             
         else:
@@ -48,7 +51,8 @@ def cgsolve(A,b,tol,maxiter,verbose=None,x0=None):
         if (numiter+1) % 50 == 0:
             # r = b - Aux*x
             if implicit:
-                r = b - np.reshape(fun(W, D, Mask,np.reshape(x,matrix_size)),len(b))
+                #r = b - np.reshape(fun(W, D, Mask,np.reshape(x,matrix_size)),len(b))
+                r = b - A(np.reshape(x,matrix_size)).flatten()
             else:
                 r = b - np.dot(A,x)
         else:

@@ -100,7 +100,8 @@ def PDF(iFreq=None,N_std=None,Mask=None,matrix_size=None,voxel_size=None,B0_dir=
     itermax=np.copy(n_CG)
     print('itermax=',itermax)
 
-    A=(dipole_term, W_var,D,Mask)
+    #A=(dipole_term, W_var,D,Mask)
+    A = lambda x=None: dipole_term(W_var, D,Mask, x)
     cg_tol=tol*np.linalg.norm(E_noise_level[Mask == 0]/ np.linalg.norm(b))
     print ('cg_tol',cg_tol)
     

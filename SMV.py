@@ -1,11 +1,9 @@
-# Generated with SMOP  0.41
-from smop.libsmop import *
+# -*- coding: utf-8 -*-
 import numpy as np
-from numpy import dot,max
-from sphere_kernel import*
-# .\SMV.m
+from numpy import dot,max, multiply
+from PyQSM.sphere_kernel import sphere_kernel
 
-    # Spherical Mean Value operator
+# Spherical Mean Value operator
 #   y=SMV(iFreq,matrix_size,voxel_size,radius)
 #   
 #   output
@@ -21,24 +19,18 @@ from sphere_kernel import*
 #   Last modified by Tian Liu on 2013.07.24
     
 
-def SMV(iFreq=None,varargin=None,*args,**kwargs):
+def SMV(iFreq=None,varargin=None):
+
     if 1 == len(varargin):
         K=varargin[0]
-# .\SMV.m:19
     else:
         matrix_size=varargin[0]
-# .\SMV.m:21
         voxel_size=varargin[1]
-# .\SMV.m:22
         if (len(varargin) < 3):
             radius=dot(round(6 / max(voxel_size)),max(voxel_size))
-# .\SMV.m:24
         else:
             radius=varargin[2]
-# .\SMV.m:26
-        K=sphere_kernel(matrix_size,voxel_size,radius)
-# .\SMV.m:28
+        K = sphere_kernel(matrix_size,voxel_size,radius)
     
-    y=np.fft.ifftn(multiply(np.fft.fftn(iFreq),K))
-# .\SMV.m:31
+    y=np.fft.ifftn(np.fft.fftn(iFreq) *K)
     return y
