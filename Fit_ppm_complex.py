@@ -35,13 +35,8 @@ from numpy.matlib import repmat
 # dytpe='single'
 _esp = 0.00000001
 
-class opts0:
-    def __init__(self):
-        self.reltol= 0.0001
-        self.max_iter = 30
-defopts=opts0()
 
-def Fit_ppm_complex(M=None,opts=defopts):
+def Fit_ppm_complex(M=None,max_iter=30,reltol=0.0001):
 #     defopts.reltol = copy(0.0001)
 #     defopts.max_iter = copy(30)
     
@@ -72,11 +67,12 @@ def Fit_ppm_complex(M=None,opts=defopts):
         M = np.concatenate((abs(M),M),axis=3)
 
     if len(M.shape)>4:
-        
-        if M.shape[4] > 1:
-        # combine multiple coils together, assuming the coil is the fifth dimension
-            M=np.sum(multiply(M,conj(repmat(M[:,:,:,1,:],concat([1,1,1,shape(M,4),1])))),5)
-            M=multiply(sqrt(abs(M)),exp(dot(1j,angle(M))))
+        print('QSM raw data dim > 4, cannot process multicoil data')
+        return 
+#         if M.shape[4] > 1:
+#         # combine multiple coils together, assuming the coil is the fifth dimension
+#             M=np.sum(multiply(M,conj(repmat(M[:,:,:,1,:],concat([1,1,1,shape(M,4),1])))),5)
+#             M=multiply(sqrt(abs(M)),exp(dot(1j,angle(M))))
     
     # determine angle
     M=np.conjugate(M)
@@ -106,7 +102,7 @@ def Fit_ppm_complex(M=None,opts=defopts):
     p0, p1 = p0.reshape(p0.size,1), p1.reshape(p1.size,1)
     
     dp1=p1.copy()
-    tol = dot(np.linalg.norm(p1[:]),opts.reltol)
+    tol = dot(np.linalg.norm(p1[:]),reltol)
     miter=0
     
     # weigthed least square
@@ -126,7 +122,7 @@ def Fit_ppm_complex(M=None,opts=defopts):
     ai12=- a12 / d
     ai22=a11 / d
 
-    while ((np.linalg.norm(dp1) > tol) and (miter < opts.max_iter)):
+    while ((np.linalg.norm(dp1) > tol) and (miter < max_iter)):
 
         miter=miter + 1
         W= abs(M) * exp(1j*np.asarray((dot(p0,v1) + dot(p1,v2))))

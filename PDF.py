@@ -70,12 +70,8 @@ def PDF(iFreq=None,N_std=None,Mask=None,matrix_size=None,voxel_size=None,B0_dir=
     W=1.0 / N_std
     W[np.isinf(W)]=0
     W=W*(Mask > 0)
-    print('W',W.shape)
-    print(W[100:102,100:102,50:52])
     W_std=W
     W_var=W ** 2
-    print('W_var',W_var.shape)
-    print(W_var[100:102,100:102,50:52])
 
     ###### start the PDF method #####
     #if norm(ravel(B0_dir),1) < 1.01:
@@ -83,20 +79,14 @@ def PDF(iFreq=None,N_std=None,Mask=None,matrix_size=None,voxel_size=None,B0_dir=
         D=dipole_kernel(matrix_size,voxel_size,B0_dir)
     else:
         D=dipole_kernel(matrix_size,voxel_size,B0_dir,space)
-    print('D',D.shape)
-    print(D[100:102,100:102,50:52])
 
     # generating the RHS vector in Eq. 6 in the PDF paper
     p_temp=np.real(np.fft.ifftn(D*np.fft.fftn(W_var*(iFreq))))
-    print('p_temp',p_temp.shape)
-    print(p_temp[100:102,100:102,50:52])
 
     b = p_temp[Mask == 0] #p_temp.flatten(1)[Mask.flatten(1)==0]#
-    print('b',b.shape)
     
     # set erance level and maximum iteration allowed
     E_noise_level=np.real(np.fft.ifftn((D*np.fft.fftn((W_std*np.ones(np.shape(N_std)))))))
-    print('E_noise_level',E_noise_level.shape)
     itermax=np.copy(n_CG)
     print('itermax=',itermax)
 

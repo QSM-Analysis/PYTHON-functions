@@ -8,6 +8,7 @@ from skimage import measure,color
 from numpy import ravel, sum, sqrt, abs, multiply
 from scipy.ndimage.morphology import binary_erosion
 from skimage.morphology.misc import remove_small_objects
+from PyQSM.SMV import SMV
 #from SMV import SMV
 
 def isempty(data):
@@ -38,9 +39,9 @@ def extract_CSF(R2s=None,Mask=None,voxel_size=None,flag_erode=1,thresh_R2s=5,*ar
     Mask_cen=sqrt(abs(X - X_cen) ** 2 + abs(Y - Y_cen) ** 2 + abs(Z - Z_cen) ** 2) <= radius_cen
     if flag_erode:
         # temporally use erosion to replace SMV
-        stru = np.ones((np.array(Mask.shape)*0.05).astype(int))
-        Mask = binary_erosion(Mask,structure=stru.astype(Mask.dtype))
-        #Mask=SMV(Mask,[[matrix_size],voxel_size,10]) > 0.999
+        #stru = np.ones((np.array(Mask.shape)*0.05).astype(int))
+        #Mask = binary_erosion(Mask,structure=stru.astype(Mask.dtype))
+        Mask=SMV(Mask,[matrix_size,voxel_size,10]) > 0.999
 
     # find csf condidate region in mask center circle    
     Mask_raw_1=(R2s < thresh_R2s) * Mask_cen
@@ -55,6 +56,8 @@ def extract_CSF(R2s=None,Mask=None,voxel_size=None,flag_erode=1,thresh_R2s=5,*ar
         return CC, CCind
     CC, CCind = getCCind(Mask_raw_1)
     ROIs_region_cen = np.zeros(matrix_size)
+    if CCind.size < n_region_cen:
+        return [] 
     for i in range(1,n_region_cen+1):# not include background i ==0
         ROIs_region_cen[CC==CCind[i]] = i 
 

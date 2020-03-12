@@ -118,11 +118,13 @@ def MEDI_L1(RDF,N_std,iMag,Mask,Mask_CSF, voxel_size,B0_dir,CF, delta_TE,   # da
     wG = gradient_mask(iMag,Mask,grad,voxel_size,edge_percentage)
 
     # CSF regularization
-    flag_CSF= (Mask_CSF.size!=0)
+    flag_CSF= not isempty(Mask_CSF) # (Mask_CSF.size!=0)
     if flag_CSF:
-        print('CSF regularization used\n')
+        print('CSF regularization used')
+    else:
+        print('CSF not used')
     oldN_std = N_std.copy()
-    print('Using ',solver,'\n')
+    print('Using ',solver)
 
     if 'gaussnewton' == solver:
         x,cost_reg_history,cost_data_history = gaussnewton(_lambda,RDF,N_std,iMag,Mask,matrix_size,matrix_size0,voxel_size,delta_TE,CF,B0_dir,merit,smv,smv_radius,Debug_Mode,lam_CSF,Mask_CSF,
@@ -156,7 +158,8 @@ def gaussnewton(_lambda,RDF,N_std,iMag,Mask,matrix_size,matrix_size0,voxel_size,
         if flag_CSF:
             reg_CSF = lambda dx=None: lam_CSF * LT_reg(LT_reg(np.real(dx)))
             reg1 = lambda dx=None: reg(dx) + reg_CSF(dx)
-            
+        else:
+            reg1 = reg   
         fidelity=lambda dx=None: Dconv(w.conj() * w * Dconv(dx))
 
         A = lambda dx=None: reg1(dx) + 2 * float(_lambda) * fidelity(dx)
