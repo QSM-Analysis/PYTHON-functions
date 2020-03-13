@@ -26,9 +26,9 @@ def dipole_kernel(matrix_size,voxel_size,B0_dir,domain='kspace'):
         D=np.fft.fftshift(D)
     else:
         if domain=='imagespace':
-            (Y,X,Z)=np.meshgrid(np.arange(-matrix_size[1]/2,(matrix_size[1]/2-1)), 
-                                np.arange(-matrix_size[0]/2,(matrix_size[0]/2-1)), 
-                                np.arange(-matrix_size[2]/2,(matrix_size[2]/2-1)) )
+            (Y,X,Z)=np.meshgrid(np.arange(-matrix_size[1]/2,(matrix_size[1]/2)), 
+                                np.arange(-matrix_size[0]/2,(matrix_size[0]/2)), 
+                                np.arange(-matrix_size[2]/2,(matrix_size[2]/2)) )
             
             X=X*voxel_size[0]
             Y=Y*voxel_size[1]
