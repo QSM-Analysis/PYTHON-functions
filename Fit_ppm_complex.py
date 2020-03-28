@@ -109,12 +109,14 @@ def Fit_ppm_complex(M=None,max_iter=30,reltol=0.0001):
     # calculation of WA'*WA
     v1=ones((1,nechos))#,M.dtype)
     v2=np.arange(0,nechos).reshape(1,nechos)#.astype(M.dtype)
-    a11=np.sum(multiply(abs(M) ** 2.0,dot(ones((s[0],1)),v1 ** 2)),1)
-    a12=np.sum(multiply(abs(M) ** 2.0,dot(ones((s[0],1)),v1 * v2)),1)
-    a22=np.sum(multiply(abs(M) ** 2.0,dot(ones((s[0],1)),v2 ** 2)),1)
-#     a11=np.sum(multiply(abs(M) ** 2.0,dot(ones((s[0],1),M.dtype),v1 ** 2)),1)
-#     a12=np.sum(multiply(abs(M) ** 2.0,dot(ones((s[0],1),M.dtype),v1 * v2)),1)
-#     a22=np.sum(multiply(abs(M) ** 2.0,dot(ones((s[0],1),M.dtype),v2 ** 2)),1)
+    a11, a12, a22 = np.zeros(s[0]),np.zeros(s[0]),np.zeros(s[0])
+    for i in range(v1.size):
+        a11 += (abs(M[:,i]) ** 2.0) * (v1[0,i] ** 2)
+        a12 += (abs(M[:,i]) ** 2.0) * (v1[0,i] * v2[0,i])
+        a22 += (abs(M[:,i]) ** 2.0) * (v2[0,i] ** 2)
+#     a11=np.sum(multiply(abs(M) ** 2.0,dot(ones((s[0],1)),v1 ** 2)),1)
+#     a12=np.sum(multiply(abs(M) ** 2.0,dot(ones((s[0],1)),v1 * v2)),1)
+#     a22=np.sum(multiply(abs(M) ** 2.0,dot(ones((s[0],1)),v2 ** 2)),1)
     # inversion
     d=a11*a22 - a12 ** 2
     d[d==0] = np.nan
@@ -125,12 +127,21 @@ def Fit_ppm_complex(M=None,max_iter=30,reltol=0.0001):
     while ((np.linalg.norm(dp1) > tol) and (miter < max_iter)):
 
         miter=miter + 1
-        W= abs(M) * exp(1j*np.asarray((dot(p0,v1) + dot(p1,v2))))
+        def mdot(p,v):
+            m = np.zeros([p.shape[0],v.shape[1]])
+            for i in range(v.shape[1]):
+                m[:,i] = (p*v[0,i]).ravel()
+            return m
+        W= abs(M) * exp(1j*(mdot(p0,v1) + mdot(p1,v2))).astype(np.complex64)
         
         # projection
-        pr1 = np.sum(np.conj(1j*W) * multiply(dot(ones((s[0],1)),v1),(M-W)),axis=1)
-        pr2 = np.sum(np.conj(1j*W) * multiply(dot(ones((s[0],1)),v2),(M-W)),axis=1)
-        
+        #pr1 = np.sum(np.conj(1j*W) * multiply(dot(ones((s[0],1)),v1),(M-W)),axis=1)
+        #pr2 = np.sum(np.conj(1j*W) * multiply(dot(ones((s[0],1)),v2),(M-W)),axis=1)
+        pr1,pr2 = np.zeros(s[0],np.complex64),np.zeros(s[0],np.complex64)
+        for i in range(v1.size):
+            pr1 += np.conj(1j*W[:,i]) * multiply(v1[0,i],(M[:,i]-W[:,i]))
+            pr2 += np.conj(1j*W[:,i]) * multiply(v2[0,i],(M[:,i]-W[:,i]))
+            
         dp0=np.real(ai11*pr1 + ai12*pr2).reshape([ai11.size,1])
         dp1=np.real(ai12*pr1 + ai22*pr2).reshape([ai11.size,1])
         dp1[np.isnan(dp1)]=0
