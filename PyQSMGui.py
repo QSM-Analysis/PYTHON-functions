@@ -167,15 +167,18 @@ class QSMClass(QtWidgets.QWidget):
         if volnum%2 != 0: 
             print('data should have same number of mag and pha data')
             return
+        def ReScalePhase(pha): return np.round(pha) / 4095 * np.pi
         if dataorder == 'mm..pp..':
             pha = self._rawdata[...,int(volnum/2):]
-            pha = pha / (np.abs(pha).max()) * np.pi;
+            #pha = pha / (np.abs(pha).max()) * np.pi;
+            pha = ReScalePhase(pha)
             mag = self._rawdata[...,:int(volnum/2)]
             TE = TE[:int(volnum/2)]
         elif dataorder == 'mpmp..':
             pha = self._rawdata[...,1::2]        
             mag = self._rawdata[..., ::2]
-            pha = pha / (np.abs(pha).max()) * np.pi;
+            #pha = pha / (np.abs(pha).max()) * np.pi;
+            pha = ReScalePhase(pha)
             TE = TE[..., ::2]
         
 #         refdatareader = copy.copy(self._image2Dframe._imgaxes[0]._datareader)
@@ -201,7 +204,7 @@ class QSMClass(QtWidgets.QWidget):
 #         datareader = DataReader()
 #         datareader.SaveNiftyFilebyData(magsum, qsm_magfilepath, qsm_filepath)
         Save1Nii(magsum.astype(int), self._fimg.affine, qsm_magfilepath)
-        QSMBet(qsm_magfilepath, qsm_maskpath,f=0.4)
+        QSMBet(qsm_magfilepath, qsm_maskpath,f=0.5)
         
 #         datareader.LoadNiftyFile(qsm_maskpath)
 #         Mask = datareader._data.astype(int)

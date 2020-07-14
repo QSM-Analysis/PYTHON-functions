@@ -37,7 +37,7 @@ def unwrapLaplacian(iFreq_raw=None,matrix_size=None,voxel_size=[1,1,1]):
         k=6 * del2(h,voxel_size)
         kernel=np.fft.fftn(np.fft.fftshift(k))
     else:
-        h=((X == 0) * (Y == 0)).astype(np.float16)#(logical_and((X == 0),(Y == 0)))*1
+        h=((X == 0) * (Y == 0)).astype(np.float32)#(logical_and((X == 0),(Y == 0)))*1
         k=4 * del2(h,voxel_size[0:2])
         kernel=np.fft.fftn(np.fft.fftshift(k))
 

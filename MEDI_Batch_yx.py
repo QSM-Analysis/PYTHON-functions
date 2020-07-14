@@ -14,7 +14,7 @@ from PyQSM.MEDI_L1 import MEDI_L1
 
 #QSM,cost_reg_history,cost_data_history=MEDI_L1(np.array(['lambda',1000,'percentage',0.9,'smv',5]))
 fig=plt.figure()
-
+data = scio.loadmat('D:\work\MATLAB\!QSM\code\MEDI_toolbox_201904\qsm_data.mat')
 data=scio.loadmat('medi_siemens_data.mat')
 iField=data['iField'].astype(np.complex64)
 

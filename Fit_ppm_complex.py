@@ -80,10 +80,16 @@ def Fit_ppm_complex(M=None,max_iter=30,reltol=0.0001):
     L_s0=len(s0)
     nechos = M.shape[-1]
     
-    M=M.reshape([np.prod(s0[:(L_s0-1)]),s0[L_s0-1]])
+    M=M.reshape([np.prod(s0[:(L_s0-1)]),s0[L_s0-1]], order='F')
     s=M.shape
     
     Y=np.angle(M[:,:np.min([3,nechos])])
+    ##################################################
+    # modified
+    while Y.min() <= -pi or Y.max() >= pi:
+        Y[Y <= -pi] += pi
+        Y[Y >=  pi] -= pi
+    ##################################################    
     c=Y[:,1] - Y[:,0]
     ind = np.argmin([abs(c-2*pi),abs(c),abs(c+2*pi)],axis=0)
     c[ind==0]=c[ind==0]-2*np.pi
@@ -91,8 +97,8 @@ def Fit_ppm_complex(M=None,max_iter=30,reltol=0.0001):
     
     for n in range(min([2,nechos-1])):
         cd=((Y[:,n + 1] - Y[:,n])) - c
-        Y[cd < - pi,(n + 1):] = Y[cd < - pi,(n + 1):] + 2*pi
-        Y[cd >   pi,(n + 1):] = Y[cd >   pi,(n + 1):] + 2*pi
+        Y[cd < - pi,(n + 1):] = Y[cd < - pi,(n + 1):] + 2*pi 
+        Y[cd >   pi,(n + 1):] = Y[cd >   pi,(n + 1):] - 2*pi
     A=np.array([[1,0],[1,1],[1,2]])
     ip=dot(np.mat(A[:min([3,nechos]),:]).I,Y[:,:min([3,nechos])].conj().T)
     ip=np.asarray(ip)
@@ -165,9 +171,24 @@ def Fit_ppm_complex(M=None,max_iter=30,reltol=0.0001):
     p1[p1 > pi]=mod(p1[p1 > pi] + pi,2*pi) - pi
     p1[p1 < - pi]=mod(p1[p1 < - pi] + pi,2*pi) - pi
     
-    p0=np.reshape(p0,s0[:(L_s0-1)])
-    p1=np.reshape(p1,s0[:(L_s0-1)])
-    dp1=np.reshape(dp1,s0[:(L_s0-1)])
-    relres=np.reshape(relres,s0[:(L_s0-1)])
+    p0=np.reshape(p0,s0[:(L_s0-1)], order='F')
+    p1=np.reshape(p1,s0[:(L_s0-1)], order='F')
+    dp1=np.reshape(dp1,s0[:(L_s0-1)], order='F')
+    relres=np.reshape(relres,s0[:(L_s0-1)], order='F')
     
     return p1,dp1,relres,p0
+
+if __name__ == '__main__':
+    data = scio.loadmat('C:/Users/25348/PycharmProjects/QSM_data/matlab.mat')
+    iField = data['iField']
+    iFreq_raw = data['iFreq_raw']
+
+    plt.figure()
+    iFreq_raw_py, N_std, a, b = Fit_ppm_complex(iField, 10)
+    fig21 = plt.subplot(3, 1, 1)
+    fig21.imshow(iFreq_raw_py[:, :, 30], 'gray', vmin=-1, vmax=1)
+    fig22 = plt.subplot(3, 1, 2)
+    fig22.imshow(iFreq_raw[:, :, 30], 'gray', vmin=-1, vmax=1)
+    fig22 = plt.subplot(3, 1, 3)
+    fig22.imshow((iFreq_raw_py - iFreq_raw)[:, :, 30], 'gray', vmin=-1, vmax=1)
+    plt.show()

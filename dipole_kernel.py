@@ -37,7 +37,7 @@ def dipole_kernel(matrix_size,voxel_size,B0_dir,domain='kspace'):
             d=(3*(X*B0_dir[0] + Y*B0_dir[1] +Z*B0_dir[2]) ** 2 - X ** 2 - Y ** 2 - Z ** 2) / (4 * np.pi * (X ** 2 + Y ** 2 + Z ** 2) ** 2.5)
             
             d[np.isnan(d)]=0
-            D=np.fft.fftn(np.fft.fftshift(d)).astype(float)
+            D=np.fft.fftn(np.fft.fftshift(d))#.astype(float)
     
     return D
     
