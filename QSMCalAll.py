@@ -114,8 +114,8 @@ def QSMCalAll(mag, pha, voxel_size, B0_dir, TE, CF,isCSFCorr=True,Mask=[],qsm_fi
     # iMag=np.sqrt(np.sum(abs(iField) ** 2,3))
     iMag=np.sqrt(np.sum(mag ** 2,3))
     print('run Dipole inversion')
-    #QSM,cost_reg_history,cost_data_history = MEDI_L1(RDF,N_std,iMag,Mask,Mask_CSF, voxel_size,B0_dir,CF, delta_TE, _lambda=1000, edge_percentage=0.9,smv_radius=5)#,max_iter=1,cg_max_iter=1)
-    QSM = iMag
+    QSM,cost_reg_history,cost_data_history = MEDI_L1(RDF,N_std,iMag,Mask,Mask_CSF, voxel_size,B0_dir,CF, delta_TE, _lambda=1000, edge_percentage=0.9,smv_radius=5)#,max_iter=1,cg_max_iter=1)
+    #QSM = iMag
     
     if isempty(Mask_CSF): Mask_final = Mask
     else: Mask_final = Mask+Mask_CSF
